@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>计组知识库本体方案</title>
+<style>
+  :root {
+    --bg: #f6f1e8;
+    --paper: #fffdf8;
+    --ink: #213547;
+    --muted: #5c6875;
+    --line: #ddd3c2;
+    --accent: #1e6f73;
+    --accent-soft: rgba(30, 111, 115, 0.08);
+    --warm: #b86b3d;
+    --shadow: 0 14px 34px rgba(33, 53, 71, 0.08);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background:
+      radial-gradient(circle at top left, rgba(30, 111, 115, 0.10), transparent 28%),
+      radial-gradient(circle at top right, rgba(184, 107, 61, 0.08), transparent 24%),
+      var(--bg);
+    color: var(--ink);
+    line-height: 1.72;
+  }
+
+  .page {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 34px 22px 70px;
+  }
+
+  .hero,
+  .section,
+  .card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    box-shadow: var(--shadow);
+  }
+
+  .hero {
+    padding: 34px;
+    margin-bottom: 22px;
+  }
+
+  .eyebrow {
+    display: inline-block;
+    margin-bottom: 10px;
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    margin: 0 0 10px;
+    font-size: clamp(34px, 4vw, 52px);
+    line-height: 1.14;
+  }
+
+  .hero p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 18px;
+    max-width: 860px;
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  .tag {
+    border-radius: 999px;
+    padding: 8px 12px;
+    border: 1px solid rgba(30, 111, 115, 0.16);
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .grid {
+    display: grid;
+    gap: 18px;
+  }
+
+  .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+  .card {
+    padding: 20px;
+  }
+
+  .card h3 {
+    margin: 0 0 8px;
+    font-size: 19px;
+  }
+
+  .card p,
+  .card li,
+  .section p,
+  .section li {
+    color: var(--muted);
+  }
+
+  .section {
+    padding: 28px;
+    margin-top: 22px;
+  }
+
+  .section h2 {
+    margin: 0 0 12px;
+    font-size: 28px;
+  }
+
+  .section > p:first-of-type {
+    margin-top: 0;
+  }
+
+  .accent {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .stack {
+    display: grid;
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .stack-box {
+    border: 1px solid rgba(30, 111, 115, 0.16);
+    border-radius: 18px;
+    padding: 18px 20px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(248,244,235,0.98));
+  }
+
+  .stack-box strong {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--ink);
+    font-size: 18px;
+  }
+
+  .arrow {
+    text-align: center;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .code {
+    margin-top: 16px;
+    padding: 18px;
+    border-radius: 18px;
+    background: #1f2937;
+    color: #f8fafc;
+    font-family: "Cascadia Code", Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.66;
+    overflow-x: auto;
+  }
+
+  .note {
+    margin-top: 16px;
+    padding: 16px 18px;
+    border-radius: 16px;
+    background: rgba(184, 107, 61, 0.08);
+    border-left: 5px solid var(--warm);
+    color: #734827;
+  }
+
+  .steps {
+    display: grid;
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .step {
+    border: 1px solid rgba(30, 111, 115, 0.14);
+    border-radius: 18px;
+    padding: 18px 20px;
+    background: rgba(30, 111, 115, 0.03);
+  }
+
+  .step strong {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--ink);
+  }
+
+  ul {
+    padding-left: 20px;
+  }
+
+  @media (max-width: 860px) {
+    .grid.two,
+    .grid.three {
+      grid-template-columns: 1fr;
+    }
+
+    .hero,
+    .section {
+      padding: 22px;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <div class="eyebrow">Knowledge Base Only</div>
+      <h1>《计算机组成原理》知识库本体方案</h1>
+      <p>
+        这份方案不再讨论外围实现细节，只定义一件事：
+        <span class="accent">这门课的知识库本体应该长什么样</span>。
+        这里先只讨论知识库本体本身。
+      </p>
+      <div class="tags">
+        <span class="tag">md-first</span>
+        <span class="tag">知识点中心</span>
+        <span class="tag">资料先读懂再入库</span>
+        <span class="tag">复杂图像单独解释</span>
+      </div>
+    </header>
+
+    <div class="grid three">
+      <article class="card">
+        <h3>这份方案只管本体</h3>
+        <p>不再写系统架构，不再写平台分层，只回答知识库里到底应该存什么。</p>
+      </article>
+      <article class="card">
+        <h3>最小单元只有一个</h3>
+        <p>核心不是题目、方法、chunk、数据库记录，而是 <span class="accent">知识点</span>。</p>
+      </article>
+      <article class="card">
+        <h3>先不讨论外层能力</h3>
+        <p>作业解答、组卷、批改、答疑先全部拿掉，这版只确立知识库自身。</p>
+      </article>
+    </div>
+
+    <section class="section">
+      <h2>1. 知识库里到底存什么</h2>
+      <p>知识库本体只保留五类长期有价值的 Markdown 文件。</p>
+      <div class="stack">
+        <div class="stack-box">
+          <strong>资料整理稿</strong>
+          每份教材、PPT、笔记、作业、试卷先被整理成一份可读 Markdown 稿，说明这份资料讲了什么、哪些页重要、能抽出哪些知识点、哪些地方有问题。
+        </div>
+        <div class="stack-box">
+          <strong>知识点页</strong>
+          这是核心资产。后面真正被反复调用的，不是整份课件，而是单个知识点页。
+        </div>
+        <div class="stack-box">
+          <strong>复杂图像解读页</strong>
+          对复杂图、结构图、表格、时序图、手写页单独保存解释稿，不把“识别出一点字”误当作“已经入库”。
+        </div>
+        <div class="stack-box">
+          <strong>勘误页</strong>
+          原始资料有错时，单独记录错点、修正依据和受影响知识点。
+        </div>
+        <div class="stack-box">
+          <strong>分歧页</strong>
+          多份资料说法不一致时，单独记录冲突和当前采用依据，不偷偷抹平。
+        </div>
+      </div>
+      <div class="note">
+        这里的层次要固定：<strong>知识点页是规范层，资料整理稿是证据层。</strong>
+        默认先读知识点页；只有知识点页不够时，再顺着出处回读资料整理稿片段。
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>2. 为什么最小单元必须是知识点</h2>
+      <div class="grid two">
+        <article class="card">
+          <h3>因为知识点最稳定</h3>
+          <p>题目会变，出题方式会变，检索方式会变，但“什么是流水线相关冲突”“什么是 8086 寻址方式”这种知识点本身是稳定的。</p>
+        </article>
+        <article class="card">
+          <h3>因为知识点最适合复用</h3>
+          <p>无论外层以后怎么变化，课程内容最终都要回到知识点维度。</p>
+        </article>
+      </div>
+      <div class="note">
+        方法不是长期主资产。方法只是运行时把若干知识点组合起来后形成的临时结果。
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>3. 一个知识点页应该是什么样</h2>
+      <p>知识点页不需要花哨，只需要后续好用、可引用、可追溯。</p>
+      <div class="code">---
+id: KP-C04-ISA-001
+title: 8086 寻址方式
+aliases:
+  - 8086 地址表示方式
+chapter: 第4章 指令系统
+topic: 8086
+type: mechanism
+source_refs:
+  - 资料/课件/指令系统4--Spring.2024.pdf#p12
+prerequisites:
+  - KP-C04-ISA-000
+related_points:
+  - KP-C04-ISA-003
+contrast_with:
+  - KP-C04-ISA-004
+updated: 2026-05-20
+---
+
+## 定义
+
+## 课程资料中的表述
+
+## 结构 / 规则 / 公式
+
+## 易混点 / 易错点
+
+## 常见关联场景
+
+## 相关知识点
+
+## 出处</div>
+      <p>重点不在于元数据有多复杂，而在于这页单独拿出来就能懂，后续整理时能稳定复用。</p>
+      <div class="steps">
+        <div class="step">
+          <strong>关系类型只保留少量高价值项</strong>
+          推荐至少维护 `prerequisites`、`related_points`、`contrast_with`、`same_topic` 和 `source_refs`。
+        </div>
+        <div class="step">
+          <strong>正文里维护正向链接</strong>
+          在正文里用 `[[知识点名]]` 明确写出这页主动链接到哪些知识点。
+        </div>
+        <div class="step">
+          <strong>反向链接自动得到</strong>
+          不人工双写。反向链接由 Obsidian backlinks 或索引生成阶段自动反推。
+        </div>
+        <div class="step">
+          <strong>只维护一边关系</strong>
+          例如 A 写 `prerequisites -> B`，不要再去 B 手写 `required_by -> A`。
+        </div>
+      </div>
+      <div class="note">
+        这就是 Karpathy 式“双向链接网络”在这里的实现：页面显式出链，工具或索引层自动回推入链。
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>4. 原始资料怎样变成知识库</h2>
+      <p>这里先区分两件事：<span class="accent">本体结构</span>决定最后存什么，<span class="accent">入库工作流</span>决定资料怎么进去。你图里的那条流程，可以保留为标准入库执行流。</p>
+      <div class="code">1. 用户把文件放入 raw/buffer/
+2. pipeline.py 自动执行：哈希计算 -> 重复检测
+3. 调用 MinerU（PDF）或 MarkItDown（PPT/Word）提取内容
+4. 对命中的复杂页面调用 Vision LLM，生成图像解读草稿
+5. LLM 复核表格提取精度
+6. 分类移动到 raw/archive/，更新 manifest
+7. LLM 编译：生成资料整理稿 + 知识点页
+8. 冲突检测 -> 勘误检测 -> 更新目录/索引 -> 记录 log</div>
+      <p>这条流可以保留，但第 4 步只是执行动作；复杂页的触发条件和最终产物，要在知识库正文里单独说明。第 7 步的落点也要固定成当前知识库本体目录，而不是再额外造一套并行中心。</p>
+      <div class="steps">
+        <div class="step">
+          <strong>先保留原资料</strong>
+          教材、PPT、笔记、作业、试卷、图片、扫描件都先作为来源保留，不直接当知识库。
+        </div>
+        <div class="step">
+          <strong>再形成资料整理稿</strong>
+          每份资料先被读懂，整理成一份可读的 Markdown 稿，而不是仅仅抽出文字。
+        </div>
+        <div class="step">
+          <strong>复杂页单独解释</strong>
+          对复杂图、模糊图表、手写页、时序图、电路图单独形成解释页。
+        </div>
+        <div class="step">
+          <strong>最后才抽知识点</strong>
+          真正进入主库的不是整份资料，而是从整理稿中抽出的知识点页。
+        </div>
+        <div class="step">
+          <strong>发现错误或冲突时单独记录</strong>
+          不把错误或矛盾直接揉进主知识点页，而是分流到勘误页和分歧页。
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>5. 分层 index 如何避免全量读取</h2>
+      <p>库变大后，不能让模型一上来就读完整个知识点目录，所以 `index.md` 应该是一组分层入口，而不是一个总表。</p>
+      <div class="steps">
+        <div class="step">
+          <strong>总索引</strong>
+          `知识库/index.md` 只负责最粗路由：章节入口、专题入口、继续往下读的方向。
+        </div>
+        <div class="step">
+          <strong>章节索引</strong>
+          `章节/.../index.md` 只回答这一章有哪些专题、核心知识点和前置知识。
+        </div>
+        <div class="step">
+          <strong>专题索引</strong>
+          `专题/.../index.md` 负责列出该专题下的知识点、易混点和强关联点。
+        </div>
+        <div class="step">
+          <strong>正文只读少量页</strong>
+          模型按“总索引 -> 章节/专题索引 -> 少量知识点正文”的顺序收缩范围。
+        </div>
+      </div>
+      <div class="code">知识库/
+├─ index.md
+├─ 章节/
+│  ├─ 第3章-存储系统/
+│  │  ├─ index.md
+│  │  └─ Cache/
+│  │     ├─ index.md
+│  │     ├─ KP-C03-CACHE-001-局部性原理.md
+│  │     ├─ KP-C03-CACHE-002-直接映射地址划分.md
+│  │     └─ KP-C03-CACHE-003-组相联映射.md
+├─ 专题/
+│  ├─ Cache/index.md
+│  ├─ 流水线/index.md
+│  └─ 8086/index.md</div>
+      <p>注意：知识点正文只存一份，章节索引和专题索引只负责指向它。</p>
+    </section>
+
+    <section class="section">
+      <h2>6. 对低质量资料采取什么原则</h2>
+      <p>
+        核心原则只有一句：
+        <span class="accent">不是识别出字就算入库，而是真正读懂并整理出来才算进入知识库。</span>
+      </p>
+      <div class="grid two">
+        <article class="card">
+          <h3>不是所有图片都要重点处理</h3>
+          <p>封面、目录、普通标题页不值得重解释，真正需要重点处理的是高信息密度、结构复杂、OCR 破碎但内容关键的页面。</p>
+        </article>
+        <article class="card">
+          <h3>允许保留不确定</h3>
+          <p>看不清的地方可以明确写“哪部分确定、哪部分不确定”，知识库不怕不确定，怕的是把错的东西写成对的。</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>7. 知识库本体的边界</h2>
+      <p>这版先明确哪些东西不并入知识库本体：</p>
+      <ul>
+        <li>个人用户记忆</li>
+        <li>作业解答逻辑</li>
+        <li>批改逻辑</li>
+        <li>组卷逻辑</li>
+        <li>答疑逻辑</li>
+        <li>展示界面</li>
+        <li>检索实现</li>
+      </ul>
+      <div class="note">
+        这些以后都可以接在知识库外面，但现在先不纳入本体。
+      </div>
+      <div class="steps">
+        <div class="step">
+          <strong>与本体相邻的个人演化层</strong>
+          你的理解、类比、追问、替代解法、待确认质疑，不直接写进知识点页，而是先进入个人演化层。
+        </div>
+        <div class="step">
+          <strong>默认保存规则</strong>
+          先记到个人演化层，挂到对应知识点，再决定是否验证通过并升级回知识点页、勘误页或分歧页。
+        </div>
+        <div class="step">
+          <strong>演化层的最少类型</strong>
+          建议至少区分 `insight`、`analogy`、`alternative_solution`、`question`、`challenge`。
+        </div>
+        <div class="step">
+          <strong>回答时分层展示</strong>
+          以后回答问题时，先给“课程规范内容”和“依据出处”，再单独附上“你的个人理解 / 类比 / 注意点”，不把二者混写。
+        </div>
+      </div>
+      <div class="code">个人演化/
+└─ users/
+   └─ &lt;user-id&gt;/
+      ├─ index.md
+      ├─ 理解笔记/
+      ├─ 个人类比/
+      ├─ 个人解法/
+      ├─ 问题追问/
+      └─ 待确认质疑/</div>
+      <p>
+        两个基础模板：
+        <a href="/D:/wzb/计算机组成原理/docs/templates/personal-insight-template.md">personal-insight-template.md</a>
+        和
+        <a href="/D:/wzb/计算机组成原理/docs/templates/challenge-note-template.md">challenge-note-template.md</a>
+      </p>
+      <div class="note">
+        如果后续接入题目层和解答层，建议现在就固定知识点关联字段：
+        `tested_points / used_points`，并允许直接扩展为
+        `tested_points_primary / tested_points_secondary / used_points_core / used_points_support`。
+        这些字段都应指向稳定的知识点 `id`。
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>8. 最小目录骨架</h2>
+      <div class="code">知识库/
+├─ 资料整理稿/
+│  ├─ 教材/
+│  ├─ 课件/
+│  ├─ 笔记/
+│  ├─ 作业/
+│  └─ 试卷/
+├─ 知识点/
+├─ 图像解读/
+├─ 勘误/
+├─ 分歧/
+└─ 目录.md</div>
+      <p>这已经足够表达知识库本体，不需要先把目录扩得很大。</p>
+    </section>
+
+    <section class="section">
+      <h2>9. Markdown、Obsidian、Codex 的角色</h2>
+      <div class="steps">
+        <div class="step">
+          <strong>Markdown 是唯一主库</strong>
+          真正长期保存的知识资产都应落在本地 `.md` 文件里。
+        </div>
+        <div class="step">
+          <strong>Obsidian 是人用界面层</strong>
+          负责浏览、双向链接、局部图谱、手动补充和审核。
+        </div>
+        <div class="step">
+          <strong>Codex 是智能执行层</strong>
+          负责入库、抽取、解释复杂图像、生成索引、读取三层知识并组织输出。
+        </div>
+      </div>
+      <div class="note">
+        关系固定为：Markdown 是主库，Obsidian 和 Codex 围绕它工作，而不是共同接管知识库。
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>10. 规则约束模块</h2>
+      <p>除了目录、模板和入库流程之外，这套知识库还必须有一份面向大模型的规则约束文件。</p>
+      <div class="steps">
+        <div class="step">
+          <strong>它不存知识</strong>
+          它不负责保存课程内容，而是负责约束模型怎么读、怎么写、怎么升级、怎么回答。
+        </div>
+        <div class="step">
+          <strong>它约束边界</strong>
+          明确哪些内容属于规范层，哪些属于证据层，哪些只能先进入个人演化层。
+        </div>
+        <div class="step">
+          <strong>它统一模型行为</strong>
+          规定读取顺序、写回规则、关系维护方式、勘误和分歧处理方式、回答分层方式。
+        </div>
+      </div>
+      <p>
+        本仓库用
+        <a href="/D:/wzb/计算机组成原理/CODEX.md">CODEX.md</a>
+        承担这个角色。这里把它作为当前 Codex 驱动知识库的规则约束文件，但它仍然服务于所有 LLM / Agent 的统一操作宪章。
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>11. 什么不属于这份方案</h2>
+      <p>为了防止再次跑偏，下面这些故意不写进知识库本体方案：</p>
+      <ul>
+        <li>外围实现怎么安排</li>
+        <li>检索细节怎么处理</li>
+        <li>调用细节怎么组织</li>
+        <li>展示细节怎么呈现</li>
+        <li>模型分工怎么微调</li>
+      </ul>
+      <div class="note">
+        这些以后都可以加，但它们不决定知识库本体。真正决定本体的只有三件事：资料怎么被读懂、知识点怎么被写成 md、后面的能力怎么围绕这些知识点工作。
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>12. 最后的定句</h2>
+      <p>
+        这次要搭建的，不是一个外壳，而是
+        <span class="accent">一套以知识点 Markdown 页为核心、以资料整理稿为来源、以复杂图像解释页为补充、以勘误和分歧记录为保障的《计算机组成原理》课程知识库</span>。
+      </p>
+    </section>
+  </div>
+</body>
+</html>

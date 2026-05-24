@@ -1,0 +1,500 @@
+﻿{
+    "records":  [
+                    {
+                        "slug":  "课件-CPU设计-Spring-2024",
+                        "source_file":  "CPU设计--Spring.2024.pdf",
+                        "source_relative":  "资料/课件/CPU设计--Spring.2024.pdf",
+                        "draft_md":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-CPU设计-Spring-2024\\课件-CPU设计-Spring-2024.md",
+                        "raw_markdown":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-CPU设计-Spring-2024\\raw-extract.md",
+                        "assets_dir":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-CPU设计-Spring-2024\\images",
+                        "type":  "courseware_draft",
+                        "status":  "extracted",
+                        "extract_meta":  {
+                                             "backend":  "mineru",
+                                             "model":  "vlm",
+                                             "language":  "ch",
+                                             "formula":  true,
+                                             "table":  true,
+                                             "is_ocr":  false,
+                                             "ocr_reason":  "prior_extract_text_ok",
+                                             "ocr_signal_summary":  "{\"char_count\": 24479, \"line_count\": 1034, \"cjk_count\": 4187, \"image_ref_count\": 14, \"replacement_char_count\": 0, \"formula_token_count\": 0}"
+                                         }
+                    },
+                    {
+                        "slug":  "课件-CPU设计2-Spring-2024",
+                        "source_file":  "CPU设计2--Spring.2024.pdf",
+                        "source_relative":  "资料/课件/CPU设计2--Spring.2024.pdf",
+                        "draft_md":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-CPU设计2-Spring-2024\\课件-CPU设计2-Spring-2024.md",
+                        "raw_markdown":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-CPU设计2-Spring-2024\\raw-extract.md",
+                        "assets_dir":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-CPU设计2-Spring-2024\\images",
+                        "type":  "courseware_draft",
+                        "status":  "extracted",
+                        "extract_meta":  {
+                                             "backend":  "mineru",
+                                             "model":  "vlm",
+                                             "language":  "ch",
+                                             "formula":  true,
+                                             "table":  true,
+                                             "is_ocr":  true,
+                                             "ocr_reason":  "prior_mineru_failed",
+                                             "ocr_signal_summary":  "{\"char_count\": 28368, \"line_count\": 1086, \"cjk_count\": 7081, \"image_ref_count\": 26, \"replacement_char_count\": 0, \"formula_token_count\": 16, \"heading_count\": 92, \"short_line_count\": 24}"
+                                         }
+                    },
+                    {
+                        "slug":  "课件-CPU设计3-Spring-2024",
+                        "source_file":  "CPU设计3--Spring.2024.pdf",
+                        "source_relative":  "资料/课件/CPU设计3--Spring.2024.pdf",
+                        "draft_md":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-CPU设计3-Spring-2024\\课件-CPU设计3-Spring-2024.md",
+                        "raw_markdown":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-CPU设计3-Spring-2024\\raw-extract.md",
+                        "assets_dir":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-CPU设计3-Spring-2024\\images",
+                        "type":  "courseware_draft",
+                        "status":  "extracted",
+                        "extract_meta":  {
+                                             "backend":  "mineru",
+                                             "model":  "vlm",
+                                             "language":  "ch",
+                                             "formula":  true,
+                                             "table":  true,
+                                             "is_ocr":  true,
+                                             "ocr_reason":  "prior_mineru_failed",
+                                             "timeout_sec":  600,
+                                             "attempt_name":  "primary",
+                                             "fallback_used":  false,
+                                             "ocr_signal_summary":  "{\"char_count\": 58121, \"line_count\": 1423, \"cjk_count\": 6932, \"image_ref_count\": 33, \"replacement_char_count\": 0, \"formula_token_count\": 6, \"heading_count\": 116, \"short_line_count\": 38}"
+                                         }
+                    },
+                    {
+                        "slug":  "课件-存储系统1-Spring-2023",
+                        "source_file":  "存储系统1--Spring.2023.pdf",
+                        "source_relative":  "资料/课件/存储系统1--Spring.2023.pdf",
+                        "draft_md":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-存储系统1-Spring-2023\\课件-存储系统1-Spring-2023.md",
+                        "raw_markdown":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-存储系统1-Spring-2023\\raw-extract.md",
+                        "assets_dir":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-存储系统1-Spring-2023\\images",
+                        "type":  "courseware_draft",
+                        "status":  "extracted",
+                        "extract_meta":  {
+                                             "backend":  "mineru",
+                                             "model":  "vlm",
+                                             "language":  "ch",
+                                             "formula":  true,
+                                             "table":  true,
+                                             "is_ocr":  false,
+                                             "ocr_reason":  "prior_extract_text_ok",
+                                             "ocr_signal_summary":  "{\"char_count\": 16994, \"line_count\": 868, \"cjk_count\": 1524, \"image_ref_count\": 39, \"replacement_char_count\": 0, \"formula_token_count\": 58}"
+                                         }
+                    },
+                    {
+                        "slug":  "课件-存储系统2-Spring-2023",
+                        "source_file":  "存储系统2--Spring.2023.pdf",
+                        "source_relative":  "资料/课件/存储系统2--Spring.2023.pdf",
+                        "draft_md":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-存储系统2-Spring-2023\\课件-存储系统2-Spring-2023.md",
+                        "raw_markdown":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-存储系统2-Spring-2023\\raw-extract.md",
+                        "assets_dir":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-存储系统2-Spring-2023\\images",
+                        "type":  "courseware_draft",
+                        "status":  "extracted",
+                        "extract_meta":  {
+                                             "backend":  "mineru",
+                                             "model":  "vlm",
+                                             "language":  "ch",
+                                             "formula":  true,
+                                             "table":  true,
+                                             "is_ocr":  false,
+                                             "ocr_reason":  "prior_extract_text_ok",
+                                             "ocr_signal_summary":  "{\"char_count\": 30227, \"line_count\": 1598, \"cjk_count\": 3066, \"image_ref_count\": 66, \"replacement_char_count\": 0, \"formula_token_count\": 42}"
+                                         }
+                    },
+                    {
+                        "slug":  "课件-存储系统3-Spring-2023",
+                        "source_file":  "存储系统3--Spring.2023.pdf",
+                        "source_relative":  "资料/课件/存储系统3--Spring.2023.pdf",
+                        "draft_md":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-存储系统3-Spring-2023\\课件-存储系统3-Spring-2023.md",
+                        "raw_markdown":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-存储系统3-Spring-2023\\raw-extract.md",
+                        "assets_dir":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-存储系统3-Spring-2023\\images",
+                        "type":  "courseware_draft",
+                        "status":  "extracted",
+                        "extract_meta":  {
+                                             "backend":  "mineru",
+                                             "model":  "vlm",
+                                             "language":  "ch",
+                                             "formula":  true,
+                                             "table":  true,
+                                             "is_ocr":  false,
+                                             "ocr_reason":  "prior_extract_text_ok",
+                                             "ocr_signal_summary":  "{\"char_count\": 36809, \"line_count\": 1742, \"cjk_count\": 4248, \"image_ref_count\": 52, \"replacement_char_count\": 0, \"formula_token_count\": 48}"
+                                         }
+                    },
+                    {
+                        "slug":  "课件-存储系统4-Spring-2023",
+                        "source_file":  "存储系统4--Spring.2023.pdf",
+                        "source_relative":  "资料/课件/存储系统4--Spring.2023.pdf",
+                        "draft_md":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-存储系统4-Spring-2023\\课件-存储系统4-Spring-2023.md",
+                        "raw_markdown":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-存储系统4-Spring-2023\\raw-extract.md",
+                        "assets_dir":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-存储系统4-Spring-2023\\images",
+                        "type":  "courseware_draft",
+                        "status":  "extracted",
+                        "extract_meta":  {
+                                             "backend":  "mineru",
+                                             "model":  "vlm",
+                                             "language":  "ch",
+                                             "formula":  true,
+                                             "table":  true,
+                                             "is_ocr":  false,
+                                             "ocr_reason":  "prior_extract_text_ok",
+                                             "ocr_signal_summary":  "{\"char_count\": 52849, \"line_count\": 1582, \"cjk_count\": 5736, \"image_ref_count\": 52, \"replacement_char_count\": 0, \"formula_token_count\": 50}"
+                                         }
+                    },
+                    {
+                        "slug":  "课件-存储系统5-Spring-2023",
+                        "source_file":  "存储系统5--Spring.2023.pdf",
+                        "source_relative":  "资料/课件/存储系统5--Spring.2023.pdf",
+                        "draft_md":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-存储系统5-Spring-2023\\课件-存储系统5-Spring-2023.md",
+                        "raw_markdown":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-存储系统5-Spring-2023\\raw-extract.md",
+                        "assets_dir":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-存储系统5-Spring-2023\\images",
+                        "type":  "courseware_draft",
+                        "status":  "extracted",
+                        "extract_meta":  {
+                                             "backend":  "mineru",
+                                             "model":  "vlm",
+                                             "language":  "ch",
+                                             "formula":  true,
+                                             "table":  true,
+                                             "is_ocr":  false,
+                                             "ocr_reason":  "prior_extract_text_ok",
+                                             "ocr_signal_summary":  "{\"char_count\": 36085, \"line_count\": 1136, \"cjk_count\": 3726, \"image_ref_count\": 35, \"replacement_char_count\": 0, \"formula_token_count\": 48}"
+                                         }
+                    },
+                    {
+                        "slug":  "课件-存储系统6-Spring-2023",
+                        "source_file":  "存储系统6--Spring.2023.pdf",
+                        "source_relative":  "资料/课件/存储系统6--Spring.2023.pdf",
+                        "draft_md":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-存储系统6-Spring-2023\\课件-存储系统6-Spring-2023.md",
+                        "raw_markdown":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-存储系统6-Spring-2023\\raw-extract.md",
+                        "assets_dir":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-存储系统6-Spring-2023\\images",
+                        "type":  "courseware_draft",
+                        "status":  "extracted",
+                        "extract_meta":  {
+                                             "backend":  "mineru",
+                                             "model":  "vlm",
+                                             "language":  "ch",
+                                             "formula":  true,
+                                             "table":  true,
+                                             "is_ocr":  false,
+                                             "ocr_reason":  "prior_extract_text_ok",
+                                             "ocr_signal_summary":  "{\"char_count\": 30829, \"line_count\": 1212, \"cjk_count\": 4020, \"image_ref_count\": 37, \"replacement_char_count\": 0, \"formula_token_count\": 48}"
+                                         }
+                    },
+                    {
+                        "slug":  "课件-指令系统1-Spring-2024",
+                        "source_file":  "指令系统1--Spring.2024.pdf",
+                        "source_relative":  "资料/课件/指令系统1--Spring.2024.pdf",
+                        "draft_md":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-指令系统1-Spring-2024\\课件-指令系统1-Spring-2024.md",
+                        "raw_markdown":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-指令系统1-Spring-2024\\raw-extract.md",
+                        "assets_dir":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-指令系统1-Spring-2024\\images",
+                        "type":  "courseware_draft",
+                        "status":  "extracted",
+                        "extract_meta":  {
+                                             "backend":  "mineru",
+                                             "model":  "vlm",
+                                             "language":  "ch",
+                                             "formula":  true,
+                                             "table":  true,
+                                             "is_ocr":  false,
+                                             "ocr_reason":  "prior_extract_text_ok",
+                                             "ocr_signal_summary":  "{\"char_count\": 17173, \"line_count\": 534, \"cjk_count\": 2783, \"image_ref_count\": 10, \"replacement_char_count\": 0, \"formula_token_count\": 24}"
+                                         }
+                    },
+                    {
+                        "slug":  "课件-指令系统2-Spring-2024",
+                        "source_file":  "指令系统2--Spring.2024.pdf",
+                        "source_relative":  "资料/课件/指令系统2--Spring.2024.pdf",
+                        "draft_md":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-指令系统2-Spring-2024\\课件-指令系统2-Spring-2024.md",
+                        "raw_markdown":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-指令系统2-Spring-2024\\raw-extract.md",
+                        "assets_dir":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-指令系统2-Spring-2024\\images",
+                        "type":  "courseware_draft",
+                        "status":  "extracted",
+                        "extract_meta":  {
+                                             "backend":  "mineru",
+                                             "model":  "vlm",
+                                             "language":  "ch",
+                                             "formula":  true,
+                                             "table":  true,
+                                             "is_ocr":  false,
+                                             "ocr_reason":  "prior_extract_text_ok",
+                                             "ocr_signal_summary":  "{\"char_count\": 32222, \"line_count\": 1063, \"cjk_count\": 4204, \"image_ref_count\": 32, \"replacement_char_count\": 0, \"formula_token_count\": 36}"
+                                         }
+                    },
+                    {
+                        "slug":  "课件-指令系统3-Spring-2024",
+                        "source_file":  "指令系统3--Spring.2024.pdf",
+                        "source_relative":  "资料/课件/指令系统3--Spring.2024.pdf",
+                        "draft_md":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-指令系统3-Spring-2024\\课件-指令系统3-Spring-2024.md",
+                        "raw_markdown":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-指令系统3-Spring-2024\\raw-extract.md",
+                        "assets_dir":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-指令系统3-Spring-2024\\images",
+                        "type":  "courseware_draft",
+                        "status":  "extracted",
+                        "extract_meta":  {
+                                             "backend":  "mineru",
+                                             "model":  "vlm",
+                                             "language":  "ch",
+                                             "formula":  true,
+                                             "table":  true,
+                                             "is_ocr":  false,
+                                             "ocr_reason":  "prior_extract_text_ok",
+                                             "timeout_sec":  600,
+                                             "ocr_signal_summary":  "{\"char_count\": 8362, \"line_count\": 392, \"cjk_count\": 1596, \"image_ref_count\": 10, \"replacement_char_count\": 0, \"formula_token_count\": 12}"
+                                         }
+                    },
+                    {
+                        "slug":  "课件-指令系统4-Spring-2024",
+                        "source_file":  "指令系统4--Spring.2024.pdf",
+                        "source_relative":  "资料/课件/指令系统4--Spring.2024.pdf",
+                        "draft_md":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-指令系统4-Spring-2024\\课件-指令系统4-Spring-2024.md",
+                        "raw_markdown":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-指令系统4-Spring-2024\\raw-extract.md",
+                        "assets_dir":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-指令系统4-Spring-2024\\images",
+                        "type":  "courseware_draft",
+                        "status":  "extracted",
+                        "extract_meta":  {
+                                             "backend":  "mineru",
+                                             "model":  "vlm",
+                                             "language":  "ch",
+                                             "formula":  true,
+                                             "table":  true,
+                                             "is_ocr":  false,
+                                             "ocr_reason":  "prior_extract_text_ok",
+                                             "timeout_sec":  600,
+                                             "ocr_signal_summary":  "{\"char_count\": 12563, \"line_count\": 591, \"cjk_count\": 2180, \"image_ref_count\": 9, \"replacement_char_count\": 0, \"formula_token_count\": 4}"
+                                         }
+                    },
+                    {
+                        "slug":  "课件-指令系统5-Spring-2024",
+                        "source_file":  "指令系统5--Spring.2024.pdf",
+                        "source_relative":  "资料/课件/指令系统5--Spring.2024.pdf",
+                        "draft_md":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-指令系统5-Spring-2024\\课件-指令系统5-Spring-2024.md",
+                        "raw_markdown":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-指令系统5-Spring-2024\\raw-extract.md",
+                        "assets_dir":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-指令系统5-Spring-2024\\images",
+                        "type":  "courseware_draft",
+                        "status":  "extracted",
+                        "extract_meta":  {
+                                             "backend":  "mineru",
+                                             "model":  "vlm",
+                                             "language":  "ch",
+                                             "formula":  true,
+                                             "table":  true,
+                                             "is_ocr":  false,
+                                             "ocr_reason":  "prior_extract_text_ok",
+                                             "timeout_sec":  600,
+                                             "ocr_signal_summary":  "{\"char_count\": 13505, \"line_count\": 628, \"cjk_count\": 3032, \"image_ref_count\": 2, \"replacement_char_count\": 0, \"formula_token_count\": 10}"
+                                         }
+                    },
+                    {
+                        "slug":  "课件-数制表示1-Spring-2025",
+                        "source_file":  "数制表示1--Spring.2025.pdf",
+                        "source_relative":  "资料/课件/数制表示1--Spring.2025.pdf",
+                        "draft_md":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-数制表示1-Spring-2025\\课件-数制表示1-Spring-2025.md",
+                        "raw_markdown":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-数制表示1-Spring-2025\\raw-extract.md",
+                        "assets_dir":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-数制表示1-Spring-2025\\images",
+                        "type":  "courseware_draft",
+                        "status":  "extracted",
+                        "extract_meta":  {
+                                             "backend":  "mineru",
+                                             "model":  "vlm",
+                                             "language":  "ch",
+                                             "formula":  true,
+                                             "table":  true,
+                                             "is_ocr":  false,
+                                             "ocr_reason":  "prior_extract_text_ok",
+                                             "timeout_sec":  600,
+                                             "ocr_signal_summary":  "{\"char_count\": 31263, \"line_count\": 724, \"cjk_count\": 2211, \"image_ref_count\": 21, \"replacement_char_count\": 0, \"formula_token_count\": 68}"
+                                         }
+                    },
+                    {
+                        "slug":  "课件-数制表示2-Spring-2025",
+                        "source_file":  "数制表示2--Spring.2025.pdf",
+                        "source_relative":  "资料/课件/数制表示2--Spring.2025.pdf",
+                        "draft_md":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-数制表示2-Spring-2025\\课件-数制表示2-Spring-2025.md",
+                        "raw_markdown":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-数制表示2-Spring-2025\\raw-extract.md",
+                        "assets_dir":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-数制表示2-Spring-2025\\images",
+                        "type":  "courseware_draft",
+                        "status":  "extracted",
+                        "extract_meta":  {
+                                             "backend":  "mineru",
+                                             "model":  "vlm",
+                                             "language":  "ch",
+                                             "formula":  true,
+                                             "table":  true,
+                                             "is_ocr":  false,
+                                             "ocr_reason":  "prior_extract_text_ok",
+                                             "timeout_sec":  600,
+                                             "ocr_signal_summary":  "{\"char_count\": 21394, \"line_count\": 703, \"cjk_count\": 3509, \"image_ref_count\": 13, \"replacement_char_count\": 0, \"formula_token_count\": 126}"
+                                         }
+                    },
+                    {
+                        "slug":  "课件-数制表示3-Spring-2025",
+                        "source_file":  "数制表示3--Spring.2025.pdf",
+                        "source_relative":  "资料/课件/数制表示3--Spring.2025.pdf",
+                        "draft_md":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-数制表示3-Spring-2025\\课件-数制表示3-Spring-2025.md",
+                        "raw_markdown":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-数制表示3-Spring-2025\\raw-extract.md",
+                        "assets_dir":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-数制表示3-Spring-2025\\images",
+                        "type":  "courseware_draft",
+                        "status":  "extracted",
+                        "extract_meta":  {
+                                             "backend":  "mineru",
+                                             "model":  "vlm",
+                                             "language":  "ch",
+                                             "formula":  true,
+                                             "table":  true,
+                                             "is_ocr":  false,
+                                             "ocr_reason":  "prior_extract_text_ok",
+                                             "timeout_sec":  600,
+                                             "ocr_signal_summary":  "{\"char_count\": 31356, \"line_count\": 632, \"cjk_count\": 3839, \"image_ref_count\": 15, \"replacement_char_count\": 0, \"formula_token_count\": 58}"
+                                         }
+                    },
+                    {
+                        "slug":  "课件-绪论1-Spring-2024",
+                        "source_file":  "绪论1--Spring.2024.pdf",
+                        "source_relative":  "资料/课件/绪论1--Spring.2024.pdf",
+                        "draft_md":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-绪论1-Spring-2024\\课件-绪论1-Spring-2024.md",
+                        "raw_markdown":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-绪论1-Spring-2024\\raw-extract.md",
+                        "assets_dir":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-绪论1-Spring-2024\\images",
+                        "type":  "courseware_draft",
+                        "status":  "extracted",
+                        "extract_meta":  {
+                                             "backend":  "mineru",
+                                             "model":  "vlm",
+                                             "language":  "ch",
+                                             "formula":  true,
+                                             "table":  true,
+                                             "is_ocr":  false,
+                                             "ocr_reason":  "prior_extract_text_ok",
+                                             "timeout_sec":  600,
+                                             "ocr_signal_summary":  "{\"char_count\": 33612, \"line_count\": 1101, \"cjk_count\": 4738, \"image_ref_count\": 43, \"replacement_char_count\": 0, \"formula_token_count\": 0}"
+                                         }
+                    },
+                    {
+                        "slug":  "课件-绪论2-Spring-2025",
+                        "source_file":  "绪论2--Spring.2025.pdf",
+                        "source_relative":  "资料/课件/绪论2--Spring.2025.pdf",
+                        "draft_md":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-绪论2-Spring-2025\\课件-绪论2-Spring-2025.md",
+                        "raw_markdown":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-绪论2-Spring-2025\\raw-extract.md",
+                        "assets_dir":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-绪论2-Spring-2025\\images",
+                        "type":  "courseware_draft",
+                        "status":  "extracted",
+                        "extract_meta":  {
+                                             "backend":  "mineru",
+                                             "model":  "vlm",
+                                             "language":  "ch",
+                                             "formula":  true,
+                                             "table":  true,
+                                             "is_ocr":  false,
+                                             "ocr_reason":  "prior_extract_text_ok",
+                                             "timeout_sec":  600,
+                                             "ocr_signal_summary":  "{\"char_count\": 11683, \"line_count\": 346, \"cjk_count\": 2407, \"image_ref_count\": 8, \"replacement_char_count\": 0, \"formula_token_count\": 30}"
+                                         }
+                    },
+                    {
+                        "slug":  "课件-运算方法-乘除专题巩固-Spring-2020",
+                        "source_file":  "运算方法-乘除专题巩固--Spring.2020.pdf",
+                        "source_relative":  "资料/课件/运算方法-乘除专题巩固--Spring.2020.pdf",
+                        "draft_md":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-运算方法-乘除专题巩固-Spring-2020\\课件-运算方法-乘除专题巩固-Spring-2020.md",
+                        "raw_markdown":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-运算方法-乘除专题巩固-Spring-2020\\raw-extract.md",
+                        "assets_dir":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-运算方法-乘除专题巩固-Spring-2020\\images",
+                        "type":  "courseware_draft",
+                        "status":  "extracted",
+                        "extract_meta":  {
+                                             "backend":  "mineru",
+                                             "model":  "vlm",
+                                             "language":  "ch",
+                                             "formula":  true,
+                                             "table":  true,
+                                             "is_ocr":  false,
+                                             "ocr_reason":  "prior_extract_text_ok",
+                                             "timeout_sec":  600,
+                                             "ocr_signal_summary":  "{\"char_count\": 39702, \"line_count\": 703, \"cjk_count\": 2453, \"image_ref_count\": 22, \"replacement_char_count\": 0, \"formula_token_count\": 48}"
+                                         }
+                    },
+                    {
+                        "slug":  "课件-运算方法1-Spring-2024",
+                        "source_file":  "运算方法1--Spring.2024.pdf",
+                        "source_relative":  "资料/课件/运算方法1--Spring.2024.pdf",
+                        "draft_md":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-运算方法1-Spring-2024\\课件-运算方法1-Spring-2024.md",
+                        "raw_markdown":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-运算方法1-Spring-2024\\raw-extract.md",
+                        "assets_dir":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-运算方法1-Spring-2024\\images",
+                        "type":  "courseware_draft",
+                        "status":  "extracted",
+                        "extract_meta":  {
+                                             "backend":  "mineru",
+                                             "model":  "vlm",
+                                             "language":  "ch",
+                                             "formula":  true,
+                                             "table":  true,
+                                             "is_ocr":  false,
+                                             "ocr_reason":  "prior_extract_text_ok",
+                                             "timeout_sec":  600,
+                                             "ocr_signal_summary":  "{\"char_count\": 39442, \"line_count\": 1085, \"cjk_count\": 2631, \"image_ref_count\": 31, \"replacement_char_count\": 0, \"formula_token_count\": 84}"
+                                         }
+                    },
+                    {
+                        "slug":  "课件-运算方法2-Spring-2024",
+                        "source_file":  "运算方法2--Spring.2024.pdf",
+                        "source_relative":  "资料/课件/运算方法2--Spring.2024.pdf",
+                        "draft_md":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-运算方法2-Spring-2024\\课件-运算方法2-Spring-2024.md",
+                        "raw_markdown":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-运算方法2-Spring-2024\\raw-extract.md",
+                        "assets_dir":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-运算方法2-Spring-2024\\images",
+                        "type":  "courseware_draft",
+                        "status":  "extracted",
+                        "extract_meta":  {
+                                             "backend":  "mineru",
+                                             "model":  "vlm",
+                                             "language":  "ch",
+                                             "formula":  true,
+                                             "table":  true,
+                                             "is_ocr":  false,
+                                             "ocr_reason":  "prior_extract_text_ok",
+                                             "timeout_sec":  600,
+                                             "ocr_signal_summary":  "{\"char_count\": 49189, \"line_count\": 1058, \"cjk_count\": 3029, \"image_ref_count\": 39, \"replacement_char_count\": 0, \"formula_token_count\": 44}"
+                                         }
+                    },
+                    {
+                        "slug":  "课件-运算方法3-Spring-2024",
+                        "source_file":  "运算方法3--Spring.2024.pdf",
+                        "source_relative":  "资料/课件/运算方法3--Spring.2024.pdf",
+                        "draft_md":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-运算方法3-Spring-2024\\课件-运算方法3-Spring-2024.md",
+                        "raw_markdown":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-运算方法3-Spring-2024\\raw-extract.md",
+                        "assets_dir":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-运算方法3-Spring-2024\\images",
+                        "type":  "courseware_draft",
+                        "status":  "extracted",
+                        "extract_meta":  {
+                                             "backend":  "mineru",
+                                             "model":  "vlm",
+                                             "language":  "ch",
+                                             "formula":  true,
+                                             "table":  true,
+                                             "is_ocr":  false,
+                                             "ocr_reason":  "prior_extract_text_ok",
+                                             "timeout_sec":  600,
+                                             "ocr_signal_summary":  "{\"char_count\": 50324, \"line_count\": 1107, \"cjk_count\": 4030, \"image_ref_count\": 18, \"replacement_char_count\": 0, \"formula_token_count\": 122}"
+                                         }
+                    },
+                    {
+                        "slug":  "课件-运算方法4-Spring-2024",
+                        "source_file":  "运算方法4--Spring.2024.pdf",
+                        "source_relative":  "资料/课件/运算方法4--Spring.2024.pdf",
+                        "draft_md":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-运算方法4-Spring-2024\\课件-运算方法4-Spring-2024.md",
+                        "raw_markdown":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-运算方法4-Spring-2024\\raw-extract.md",
+                        "assets_dir":  "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\课件\\课件-运算方法4-Spring-2024\\images",
+                        "type":  "courseware_draft",
+                        "status":  "extracted",
+                        "extract_meta":  {
+                                             "backend":  "mineru",
+                                             "model":  "vlm",
+                                             "language":  "ch",
+                                             "formula":  true,
+                                             "table":  true,
+                                             "is_ocr":  false,
+                                             "ocr_reason":  "prior_extract_text_ok",
+                                             "timeout_sec":  600,
+                                             "ocr_signal_summary":  "{\"char_count\": 26020, \"line_count\": 849, \"cjk_count\": 2241, \"image_ref_count\": 14, \"replacement_char_count\": 0, \"formula_token_count\": 76}"
+                                         }
+                    }
+                ]
+}

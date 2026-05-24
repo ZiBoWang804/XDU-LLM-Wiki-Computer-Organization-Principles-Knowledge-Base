@@ -1,0 +1,145 @@
+{
+  "records": [
+    {
+      "slug": "历年考试卷-2020_final",
+      "source_file": "2020_final.md",
+      "source_relative": "资料/历年考试卷/2020_final.md",
+      "draft_md": "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\试卷\\历年考试卷-2020_final\\历年考试卷-2020_final.md",
+      "raw_markdown": "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\试卷\\历年考试卷-2020_final\\raw-extract.md",
+      "assets_dir": null,
+      "type": "exam_draft",
+      "status": "imported",
+      "extract_meta": {
+        "backend": "md"
+      }
+    },
+    {
+      "slug": "历年考试卷-2022_final",
+      "source_file": "2022_final.md",
+      "source_relative": "资料/历年考试卷/2022_final.md",
+      "draft_md": "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\试卷\\历年考试卷-2022_final\\历年考试卷-2022_final.md",
+      "raw_markdown": "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\试卷\\历年考试卷-2022_final\\raw-extract.md",
+      "assets_dir": null,
+      "type": "exam_draft",
+      "status": "imported",
+      "extract_meta": {
+        "backend": "md"
+      }
+    },
+    {
+      "slug": "历年考试卷-计算机组成与结构Ⅰ-2022年试题A卷-顾新",
+      "source_file": "《计算机组成与结构Ⅰ》2022年试题A卷-顾新.pdf",
+      "source_relative": "资料/历年考试卷/《计算机组成与结构Ⅰ》2022年试题A卷-顾新.pdf",
+      "draft_md": "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\试卷\\历年考试卷-计算机组成与结构Ⅰ-2022年试题A卷-顾新\\历年考试卷-计算机组成与结构Ⅰ-2022年试题A卷-顾新.md",
+      "raw_markdown": "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\试卷\\历年考试卷-计算机组成与结构Ⅰ-2022年试题A卷-顾新\\raw-extract.md",
+      "assets_dir": "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\试卷\\历年考试卷-计算机组成与结构Ⅰ-2022年试题A卷-顾新\\images",
+      "type": "exam_draft",
+      "status": "extracted",
+      "extract_meta": {
+        "backend": "mineru",
+        "model": "vlm",
+        "language": "ch",
+        "formula": true,
+        "table": true,
+        "is_ocr": false,
+        "ocr_reason": "prior_extract_text_ok",
+        "timeout_sec": 600,
+        "attempt_name": "primary",
+        "fallback_used": false,
+        "ocr_signal_summary": "{\"char_count\": 5146, \"line_count\": 48, \"cjk_count\": 1157, \"image_ref_count\": 2, \"replacement_char_count\": 0, \"formula_token_count\": 0}"
+      }
+    },
+    {
+      "slug": "历年考试卷-计算机组成与结构试题-有答案",
+      "source_file": "计算机组成与结构试题（有答案）.pdf",
+      "source_relative": "资料/历年考试卷/计算机组成与结构试题（有答案）.pdf",
+      "draft_md": "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\试卷\\历年考试卷-计算机组成与结构试题-有答案\\历年考试卷-计算机组成与结构试题-有答案.md",
+      "raw_markdown": "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\试卷\\历年考试卷-计算机组成与结构试题-有答案\\raw-extract.md",
+      "assets_dir": "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\试卷\\历年考试卷-计算机组成与结构试题-有答案\\images",
+      "type": "exam_draft",
+      "status": "manual_review_required",
+      "extract_meta": {
+        "backend": "mineru",
+        "model": "mixed",
+        "language": "ch",
+        "formula": true,
+        "table": true,
+        "is_ocr": "mixed",
+        "ocr_reason": "multi_attempt_quality_gate_failed",
+        "timeout_sec": 600,
+        "attempt_name": "vlm_ocr__vlm_text__pipeline_ocr__pipeline_text",
+        "fallback_used": true,
+        "ocr_signal_summary": "all four MinerU attempts still showed severe OCR pollution; the draft now stores a six-paper split summary plus question-answer mapping while raw OCR stays in raw-extract.md"
+      }
+    },
+    {
+      "slug": "历年考试卷-计组2019",
+      "source_file": "计组2019.pdf",
+      "source_relative": "资料/历年考试卷/计组2019.pdf",
+      "draft_md": "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\试卷\\历年考试卷-计组2019\\历年考试卷-计组2019.md",
+      "raw_markdown": "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\试卷\\历年考试卷-计组2019\\raw-extract.md",
+      "assets_dir": "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\试卷\\历年考试卷-计组2019\\images",
+      "type": "exam_draft",
+      "status": "extracted",
+      "extract_meta": {
+        "backend": "mineru",
+        "model": "vlm",
+        "language": "ch",
+        "formula": true,
+        "table": true,
+        "is_ocr": false,
+        "ocr_reason": "binary_signals_text_pdf",
+        "timeout_sec": 600,
+        "attempt_name": "primary",
+        "fallback_used": false,
+        "ocr_signal_summary": "{\"image_obj_count\": 6, \"font_obj_count\": 0, \"text_op_count\": 77, \"to_unicode_count\": 0}"
+      }
+    },
+    {
+      "slug": "历年考试卷-计组2020",
+      "source_file": "计组2020.pdf",
+      "source_relative": "资料/历年考试卷/计组2020.pdf",
+      "draft_md": "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\试卷\\历年考试卷-计组2020\\历年考试卷-计组2020.md",
+      "raw_markdown": "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\试卷\\历年考试卷-计组2020\\raw-extract.md",
+      "assets_dir": "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\试卷\\历年考试卷-计组2020\\images",
+      "type": "exam_draft",
+      "status": "extracted",
+      "extract_meta": {
+        "backend": "mineru",
+        "model": "vlm",
+        "language": "ch",
+        "formula": true,
+        "table": true,
+        "is_ocr": false,
+        "ocr_reason": "prior_extract_text_ok",
+        "timeout_sec": 600,
+        "attempt_name": "primary",
+        "fallback_used": false,
+        "ocr_signal_summary": "{\"char_count\": 14222, \"line_count\": 49, \"cjk_count\": 851, \"image_ref_count\": 1, \"replacement_char_count\": 0, \"formula_token_count\": 4}"
+      }
+    },
+    {
+      "slug": "历年考试卷-计组2022",
+      "source_file": "计组2022.pdf",
+      "source_relative": "资料/历年考试卷/计组2022.pdf",
+      "draft_md": "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\试卷\\历年考试卷-计组2022\\历年考试卷-计组2022.md",
+      "raw_markdown": "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\试卷\\历年考试卷-计组2022\\raw-extract.md",
+      "assets_dir": "D:\\wzb\\计算机组成原理\\知识库\\资料整理稿\\试卷\\历年考试卷-计组2022\\images",
+      "type": "exam_draft",
+      "status": "extracted",
+      "extract_meta": {
+        "backend": "mineru",
+        "model": "vlm",
+        "language": "ch",
+        "formula": true,
+        "table": true,
+        "is_ocr": false,
+        "ocr_reason": "prior_extract_text_ok",
+        "timeout_sec": 600,
+        "attempt_name": "primary",
+        "fallback_used": false,
+        "ocr_signal_summary": "{\"char_count\": 5146, \"line_count\": 48, \"cjk_count\": 1157, \"image_ref_count\": 2, \"replacement_char_count\": 0, \"formula_token_count\": 0}"
+      }
+    }
+  ]
+}
