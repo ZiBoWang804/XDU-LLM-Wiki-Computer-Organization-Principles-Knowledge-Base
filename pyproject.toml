@@ -1,0 +1,20 @@
+﻿[project]
+name = "comporg-kb"
+version = "0.1.0"
+description = "Computer Organization markdown knowledge base tooling"
+readme = "architecture-overview.md"
+requires-python = ">=3.11"
+dependencies = [
+  "pyyaml>=6.0",
+  "markdown>=3.4",
+  "markitdown",
+  "mineru-open-sdk"
+]
+
+[project.optional-dependencies]
+heavy = [
+  "magic-pdf"
+]
+
+[tool.uv]
+package = false
