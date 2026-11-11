@@ -14,6 +14,8 @@ cloudflared.exe
 资料/
 courses/
 /*.pdf
+.claude/
+.omx/
 
 # 运行时缓存
 app/data/emb_cache/
