@@ -1,0 +1,142 @@
+[
+ {
+  "question": "求 G[E]: E→TE',T→FT' 的 FOLLOW(E)",
+  "right_answer": "FOLLOW(E)={#,)}",
+  "student_answer": "学生漏了 )",
+  "cause": "概念不清",
+  "note": "FOLLOW 计算规则没掌握"
+ },
+ {
+  "question": "求 SELECT(E'→ε)",
+  "right_answer": "SELECT=FOLLOW(E')={#,)}",
+  "student_answer": "学生填了 FIRST(E')",
+  "cause": "概念不清",
+  "note": "ε 产生式 SELECT 用 FOLLOW 没记住"
+ },
+ {
+  "question": "判断 A→Ab|c 是否 LL(1)",
+  "right_answer": "不是 LL(1)：SELECT(A→Ab)∩SELECT(A→c)={b}∩{c}=∅ 但有左递归不能 LL(1)",
+  "student_answer": "写成是 LL(1)",
+  "cause": "审题偏差",
+  "note": "忽略左递归直接判 LL(1)"
+ },
+ {
+  "question": "求 FIRSTVT(A)，A→aB",
+  "right_answer": "FIRSTVT(A) 含 a 与 FIRSTVT(B)",
+  "student_answer": "只写了 a",
+  "cause": "概念不清",
+  "note": "漏掉继承传播规则"
+ },
+ {
+  "question": "消除左递归 A→Aa|b",
+  "right_answer": "A→bA'，A'→aA'|ε",
+  "student_answer": "写成 A→b|a",
+  "cause": "计算失误",
+  "note": "改写规则记错"
+ },
+ {
+  "question": "x:=a+b*c 的四元式",
+  "right_answer": "(*,b,c,T1)(+,a,T1,T2)(:=,T2,_,x)",
+  "student_answer": "把优先级算错先算 a+b",
+  "cause": "计算失误",
+  "note": "运算符优先级失误"
+ },
+ {
+  "question": "a+b*c 的逆波兰式",
+  "right_answer": "abc*+",
+  "student_answer": "写成 abc+*",
+  "cause": "计算失误",
+  "note": "入栈出栈顺序错"
+ },
+ {
+  "question": "句型的句柄在哪",
+  "right_answer": "最左直接短语",
+  "student_answer": "写成最右直接短语",
+  "cause": "概念不清",
+  "note": "句柄定义混淆"
+ },
+ {
+  "question": "SLR(1) 冲突解决",
+  "right_answer": "用 FOLLOW 集做展望符",
+  "student_answer": "写成用 FIRST 集",
+  "cause": "概念不清",
+  "note": "SLR 与 LL 判定混淆"
+ },
+ {
+  "question": "NFA 确定化",
+  "right_answer": "子集法求 ε-闭包构造状态转换表",
+  "student_answer": "直接画 NFA 当 DFA",
+  "cause": "知识迁移不足",
+  "note": "不会用子集法"
+ },
+ {
+  "question": "二义性判定",
+  "right_answer": "两棵不同语法树⇒二义",
+  "student_answer": "只看产生式个数",
+  "cause": "概念不清",
+  "note": "定义没掌握"
+ },
+ {
+  "question": "L(G)={a^n b^n} 的文法",
+  "right_answer": "S→aSb|ab",
+  "student_answer": "写成 S→abS",
+  "cause": "知识迁移不足",
+  "note": "递归嵌套模式识别不出"
+ },
+ {
+  "question": "综合属性 vs 继承属性",
+  "right_answer": "综合自下而上、继承自上而下",
+  "student_answer": "说反了",
+  "cause": "概念不清",
+  "note": "定义混淆"
+ },
+ {
+  "question": "传地址调用效果",
+  "right_answer": "形参改变影响实参",
+  "student_answer": "答不影响",
+  "cause": "概念不清",
+  "note": "参数传递方式性质没记住"
+ },
+ {
+  "question": "算符优先归约对象",
+  "right_answer": "最左素短语",
+  "student_answer": "答句柄",
+  "cause": "概念不清",
+  "note": "与 LR 归约混淆"
+ },
+ {
+  "question": "FOLLOW 可空传染 T→αAβ,β可空",
+  "right_answer": "FOLLOW(A)⊇FOLLOW(T)",
+  "student_answer": "漏了传染",
+  "cause": "概念不清",
+  "note": "可空传染规则漏"
+ },
+ {
+  "question": "预测分析表 ε 式填法",
+  "right_answer": "按 FOLLOW 填",
+  "student_answer": "按 FIRST 填",
+  "cause": "概念不清",
+  "note": "填表规则记混"
+ },
+ {
+  "question": "词法分析输出",
+  "right_answer": "token 二元组(类别,属性值)",
+  "student_answer": "只答单词",
+  "cause": "审题偏差",
+  "note": "没看清问的是输出形式"
+ },
+ {
+  "question": "Chomsky 3 型判定",
+  "right_answer": "右线性或左线性",
+  "student_answer": "答成上下文无关",
+  "cause": "概念不清",
+  "note": "分类形状记错"
+ },
+ {
+  "question": "四元式 result 位置",
+  "right_answer": "第三式 (:=,T2,_,x) result 是 x",
+  "student_answer": "把 T2 当 result",
+  "cause": "计算失误",
+  "note": "四元式格式笔误"
+ }
+]

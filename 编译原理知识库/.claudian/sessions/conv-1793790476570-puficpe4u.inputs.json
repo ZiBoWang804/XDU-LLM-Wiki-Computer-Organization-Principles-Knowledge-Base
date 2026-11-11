@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "conversationId": "conv-1793790476570-puficpe4u",
+  "records": [
+    {
+      "schemaVersion": 1,
+      "id": "msg-1793790476619-8qtgwoc",
+      "userTurnOrdinal": 1,
+      "state": "accepted",
+      "localMessageId": "msg-1793790476563-jakn2nu",
+      "timestamp": 1793790476563,
+      "rawDisplayText": "**第 5 题**：写一文法 G，使 $L(G)=\\{w \\in \\{a,b\\}^* \\mid w \\text{ 以 ab 结尾}\\}$，并判断文法类型。  这题答案我写的是  \nS →  ABab\nA → aA|ε\nB→ bB|ε  对不对",
+      "canonicalText": "**第 5 题**：写一文法 G，使 $L(G)=\\{w \\in \\{a,b\\}^* \\mid w \\text{ 以 ab 结尾}\\}$，并判断文法类型。  这题答案我写的是  \nS →  ABab\nA → aA|ε\nB→ bB|ε  对不对",
+      "context": {
+        "linkedContent": {
+          "path": "期末复习-强化卷-文法语言与LL1.md"
+        },
+        "editorSelection": {
+          "notePath": "期末复习-强化卷-文法语言与LL1.md",
+          "mode": "selection",
+          "selectedText": "→ b",
+          "lineCount": 1,
+          "startLine": 70
+        }
+      },
+      "images": [],
+      "contentDigest": "5e48f8b0348228a019b5a52dbea1970ce6991b32e63999a7c1f3b1f35dfde16c",
+      "providerUserMessageId": "8da0ffea-07af-4005-8724-36760fbed886",
+      "providerAssistantMessageId": "f4874ed1-0d36-4dde-9a4d-72b3ca32ebd9"
+    },
+    {
+      "schemaVersion": 1,
+      "id": "msg-1793791457261-h8us23t",
+      "userTurnOrdinal": 2,
+      "state": "accepted",
+      "localMessageId": "msg-1793791457257-syj7wpg",
+      "timestamp": 1793791457257,
+      "rawDisplayText": "这里的含ε 意思是长度计算包括ε吗",
+      "canonicalText": "这里的含ε 意思是长度计算包括ε吗",
+      "context": {
+        "editorSelection": {
+          "notePath": "期末复习-强化卷-文法语言与LL1.md",
+          "mode": "selection",
+          "selectedText": " **第 8 题**：写一文法 G，使 $L(G)=\\{w \\in \\{0,1\\}^* \\mid |w| \\text{ 是 3 的倍数}\\}$（含 ε），并判断文法类型。",
+          "lineCount": 1,
+          "startLine": 109
+        }
+      },
+      "images": [],
+      "contentDigest": "aa80a97c9e33df1086913f9885e26f18d78765947dda37246978bd204c235132",
+      "providerUserMessageId": "7ecf84af-a6cb-428c-b423-6d2a1f910eac",
+      "providerAssistantMessageId": "bc3fa973-8edf-4b4c-a2d7-d4e62e286653"
+    },
+    {
+      "schemaVersion": 1,
+      "id": "msg-1793791607232-o16dsbx",
+      "userTurnOrdinal": 3,
+      "state": "accepted",
+      "localMessageId": "msg-1793791607228-2dnhh9u",
+      "timestamp": 1793791607228,
+      "rawDisplayText": "S→000S∣001S∣010S∣011S∣100S∣101S∣110S∣111S∣ϵ  这个是不是正确答案，它是不是三型文法",
+      "canonicalText": "S→000S∣001S∣010S∣011S∣100S∣101S∣110S∣111S∣ϵ  这个是不是正确答案，它是不是三型文法",
+      "context": {
+        "editorSelection": {
+          "notePath": "期末复习-强化卷-文法语言与LL1.md",
+          "mode": "selection",
+          "selectedText": " **第 8 题**：写一文法 G，使 $L(G)=\\{w \\in \\{0,1\\}^* \\mid |w| \\text{ 是 3 的倍数}\\}$（含 ε），并判断文法类型。",
+          "lineCount": 1,
+          "startLine": 109
+        }
+      },
+      "images": [],
+      "contentDigest": "8700dcdb59526befb1e95b62e26f298e5fee00ea92cab53dc4d10c92bec62089",
+      "providerUserMessageId": "5738c45a-ea6e-4fd9-b9f0-93961ef61e02",
+      "providerAssistantMessageId": "f7989201-deca-4b74-8881-3341cb767505"
+    },
+    {
+      "schemaVersion": 1,
+      "id": "msg-1793794321667-7otmer1",
+      "userTurnOrdinal": 4,
+      "state": "accepted",
+      "localMessageId": "msg-1793794321662-hekfw9j",
+      "timestamp": 1793794321662,
+      "rawDisplayText": "预测分析表里T'这一行写错了",
+      "canonicalText": "预测分析表里T'这一行写错了",
+      "context": {
+        "editorSelection": {
+          "notePath": "期末复习-强化卷-文法语言与LL1.md",
+          "mode": "selection",
+          "selectedText": "**解 (4) LL(1) 预测分析表**（M[非终结符, 终结符]，表中每格恰好一个产生式，其余空格为报错）：\n\n|        | (     | i     | +       | \\*       | )    | #    |\n| ------ | ----- | ----- | ------- | -------- | ---- | ---- |\n| **E**  | E→TE' | E→TE' |         |          |      |      |\n| **E'** |       |       | E'→+TE' |          | E'→ε | E'→ε |\n| **T**  | T→FT' | T→FT' |         |          |      |      |\n| **T'** |       |       |         | T'→\\*FT' | T'→ε | T'→ε |\n| **F**  | F→(E) | F→i   |         |          |      |      |",
+          "lineCount": 9,
+          "startLine": 170
+        }
+      },
+      "images": [],
+      "contentDigest": "5efdb45193d0d09d35388e6d5627bb81aeef157e41e6045a894a17ab4ac8fec4",
+      "providerUserMessageId": "06e5a7a7-67e6-486f-bd76-7cadd16aa222",
+      "providerAssistantMessageId": "b3ee19c2-53fd-4c73-af55-6d52aeb9b32e"
+    }
+  ]
+}

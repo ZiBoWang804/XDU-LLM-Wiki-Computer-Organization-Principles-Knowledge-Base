@@ -1,0 +1,24 @@
+{
+  "id": "conv-1793790476570-puficpe4u",
+  "providerId": "claude",
+  "title": "Grammar answer check for ab-ending language",
+  "titleGenerationStatus": "success",
+  "createdAt": 1793790476577,
+  "lastActivityAt": 1793794360269,
+  "sessionId": "4c3645b7-52da-4860-a88c-a8a9ccfd50f2",
+  "selectedModel": "sonnet",
+  "providerState": {
+    "providerSessionId": "4c3645b7-52da-4860-a88c-a8a9ccfd50f2"
+  },
+  "linkedContentPath": "期末复习-强化卷-文法语言与LL1.md",
+  "usage": {
+    "model": "sonnet",
+    "inputTokens": 456,
+    "cacheCreationInputTokens": 0,
+    "cacheReadInputTokens": 30400,
+    "contextWindow": 1000000,
+    "contextTokens": 30856,
+    "percentage": 3,
+    "contextWindowIsAuthoritative": true
+  }
+}

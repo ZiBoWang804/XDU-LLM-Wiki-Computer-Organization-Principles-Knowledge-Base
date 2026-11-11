@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "conversationId": "conv-1791731865388-wmxyhv9pn",
+  "records": [
+    {
+      "schemaVersion": 1,
+      "id": "msg-1791731867013-jox1i4b",
+      "userTurnOrdinal": 1,
+      "state": "accepted",
+      "localMessageId": "msg-1791731865384-6452hy3",
+      "timestamp": 1791731865384,
+      "rawDisplayText": "S->空这个文法是什么文法呢",
+      "canonicalText": "S->空这个文法是什么文法呢",
+      "context": {
+        "editorSelection": {
+          "notePath": "02-文法和语言.md",
+          "mode": "selection",
+          "selectedText": "**1型**",
+          "lineCount": 1,
+          "startLine": 104
+        },
+        "linkedContent": {
+          "path": "02-文法和语言.md"
+        }
+      },
+      "images": [],
+      "contentDigest": "b9ba0c2312ae521b70752efb0d957633b5997200d2ea85cc68bb2a4278e9ef87",
+      "providerUserMessageId": "b3c7ba42-eec3-450a-9ffa-f36a38c5fbbb",
+      "providerAssistantMessageId": "e9f8ed81-6da8-4758-9d0f-45a7804e4c32"
+    },
+    {
+      "schemaVersion": 1,
+      "id": "msg-1791732194918-4fs463i",
+      "userTurnOrdinal": 2,
+      "state": "accepted",
+      "localMessageId": "msg-1791732194915-76r2zbs",
+      "timestamp": 1791732194915,
+      "rawDisplayText": "加在这一行里面",
+      "canonicalText": "加在这一行里面",
+      "context": {
+        "editorSelection": {
+          "notePath": "02-文法和语言.md",
+          "mode": "selection",
+          "selectedText": "$\\alpha A \\beta \\to \\alpha \\gamma \\beta$（$\\gamma\\geq A$）",
+          "lineCount": 1,
+          "startLine": 104
+        }
+      },
+      "images": [],
+      "contentDigest": "301175006964530ec09c99b6ea4d186b645590d18a5a9b8e18e1821610533298",
+      "providerUserMessageId": "b97f0f2e-e5d2-46f3-ba5a-055b3462803e",
+      "providerAssistantMessageId": "55e5866b-5eb7-4419-a8a5-441b19dd1b35"
+    },
+    {
+      "schemaVersion": 1,
+      "id": "msg-1792042258009-lxqu5pv",
+      "userTurnOrdinal": 3,
+      "state": "accepted",
+      "localMessageId": "msg-1792042257995-borhekc",
+      "timestamp": 1792042257995,
+      "rawDisplayText": "FIRSTVT 和 LASTVT集、算符优先关系表、算符优先文法在哪里讲的，相关资料在哪里？",
+      "canonicalText": "FIRSTVT 和 LASTVT集、算符优先关系表、算符优先文法在哪里讲的，相关资料在哪里？",
+      "images": [],
+      "contentDigest": "7eda79f0808ec832ba6d50568c7652fe8029ba00cf5dd59302e5c25c94e6d6d3",
+      "providerUserMessageId": "b13f6b67-f3e3-4c57-a871-4b67b3bc5889",
+      "providerAssistantMessageId": "c1964608-c327-43a4-936e-bb2055c3375d"
+    },
+    {
+      "schemaVersion": 1,
+      "id": "msg-1793433315557-m1aremk",
+      "userTurnOrdinal": 4,
+      "state": "accepted",
+      "localMessageId": "msg-1793433315526-5gw5a84",
+      "timestamp": 1793433315526,
+      "rawDisplayText": "G[S]：S→a | ∧ | (T)，T→T,S | S。求 FIRSTVT、LASTVT，构造优先关系表，判断是否算符优先文法。\n为什么没有拓广？",
+      "canonicalText": "G[S]：S→a | ∧ | (T)，T→T,S | S。求 FIRSTVT、LASTVT，构造优先关系表，判断是否算符优先文法。\n为什么没有拓广？",
+      "context": {
+        "editorSelection": {
+          "notePath": "期末复习专题.md",
+          "mode": "selection",
+          "selectedText": " G[S]：S→a | ∧ | (T)，T→T,S | S。求 FIRSTVT、LASTVT，构造优先关系表，判断是否算符优先文法。\n",
+          "lineCount": 2,
+          "startLine": 88
+        }
+      },
+      "images": [],
+      "contentDigest": "c9f26660766ae946da3b89e8a2f0e985721d267533cd903595fe83f6afba5ec5",
+      "providerUserMessageId": "972cd2a4-95b6-4c3c-90c6-111591692830",
+      "providerAssistantMessageId": "e1976fab-45e2-4e2e-8461-cae9bc560ff4"
+    },
+    {
+      "schemaVersion": 1,
+      "id": "msg-1793435129511-8wq4btu",
+      "userTurnOrdinal": 5,
+      "state": "accepted",
+      "localMessageId": "msg-1793435129507-4i6k79i",
+      "timestamp": 1793435129507,
+      "rawDisplayText": "这个题出错了吧？",
+      "canonicalText": "这个题出错了吧？",
+      "context": {
+        "editorSelection": {
+          "notePath": "期末复习专题.md",
+          "mode": "selection",
+          "selectedText": "> **练习 1**：G[E]：E→E+T | T，T→T*F | F，F→(E) | i。求 FIRSTVT、LASTVT，构造算符优先关系表并判定。",
+          "lineCount": 1,
+          "startLine": 116
+        }
+      },
+      "images": [],
+      "contentDigest": "2ba8a845861cad0dca04b430824625b6c8397834caaa96b46f21b7729905574e",
+      "providerUserMessageId": "7fea5076-d75f-4093-88c7-5d7233a8e97d",
+      "providerAssistantMessageId": "33d558d6-7e96-4220-85fe-4728e0912bc0"
+    }
+  ]
+}

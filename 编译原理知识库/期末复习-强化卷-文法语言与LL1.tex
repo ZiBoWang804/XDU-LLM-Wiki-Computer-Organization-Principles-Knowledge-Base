@@ -1,0 +1,412 @@
+% !TEX program = xelatex
+\documentclass[12pt,a4paper,fontset=windows]{ctexart}
+\usepackage{amsmath,amssymb}
+\usepackage[a4paper,margin=2.2cm,top=2.6cm,bottom=2.4cm,headheight=15pt]{geometry}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usetikzlibrary{trees}
+\usepackage[most]{tcolorbox}
+\usepackage{fancyhdr}
+\usepackage[hidelinks,unicode]{hyperref}
+\hypersetup{pdftitle={期末复习模拟卷 + 强化卷（附详细解答）}}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[C]{\small 期末复习模拟卷 + 强化卷（附详细解答）}
+\fancyfoot[C]{\small —~\thepage~—}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\setlist[enumerate]{itemsep=1pt,topsep=3pt,leftmargin=2.2em}
+\setlist[itemize]{itemsep=2pt,topsep=3pt,leftmargin=1.6em}
+
+\newcommand{\FV}[1]{\ensuremath{\mathrm{FIRSTVT}(#1)}}
+\newcommand{\LV}[1]{\ensuremath{\mathrm{LASTVT}(#1)}}
+\newcommand{\FVname}{\ensuremath{\mathrm{FIRSTVT}}}
+\newcommand{\LVname}{\ensuremath{\mathrm{LASTVT}}}
+\newcommand{\FR}[1]{\ensuremath{\mathrm{FIRST}(#1)}}
+\newcommand{\FO}[1]{\ensuremath{\mathrm{FOLLOW}(#1)}}
+\newcommand{\FRname}{\ensuremath{\mathrm{FIRST}}}
+\newcommand{\FOname}{\ensuremath{\mathrm{FOLLOW}}}
+\newcommand{\ok}{\ensuremath{\checkmark}}
+\newcommand{\bad}{\ensuremath{\times}}
+\newcommand{\imp}{\ensuremath{\Rightarrow}}
+
+\newtcolorbox{qbox}[1][题目]{%
+  enhanced,breakable,colback=gray!8,colframe=gray!55!black,
+  boxrule=0.6pt,arc=2pt,left=7pt,right=7pt,top=5pt,bottom=5pt,
+  before skip=8pt,after skip=8pt,
+  title={\bfseries #1},coltitle=black,colbacktitle=gray!25,fonttitle=\bfseries}
+\newtcolorbox{warnbox}[1][本题易错]{%
+  enhanced,breakable,colback=yellow!12,colframe=orange!75!black,
+  boxrule=0.7pt,arc=2pt,left=7pt,right=7pt,top=5pt,bottom=5pt,
+  before skip=8pt,after skip=8pt,
+  title={\bfseries #1},coltitle=black,colbacktitle=yellow!35,fonttitle=\bfseries}
+\newtcolorbox{tipbox}[1][要点提示]{%
+  enhanced,breakable,colback=blue!5,colframe=blue!50!black,
+  boxrule=0.7pt,arc=2pt,left=7pt,right=7pt,top=5pt,bottom=5pt,
+  before skip=8pt,after skip=8pt,
+  title={\bfseries #1},coltitle=black,colbacktitle=blue!15,fonttitle=\bfseries}
+\newtcolorbox{infobox}{%
+  enhanced,breakable,colback=gray!6,colframe=gray!45!black,
+  boxrule=0.5pt,arc=1mm,left=7pt,right=7pt,top=5pt,bottom=5pt,
+  before skip=6pt,after skip=8pt}
+
+\begin{document}
+\fancyhead[C]{\small 期末复习强化卷 — 文法$\rightleftarrows$语言 8 题 + LL(1) 1 题（附答案与解析）}
+\hypersetup{pdftitle={期末复习强化卷 — 文法⇄语言 8 题 + LL(1) 1 题（附答案与解析）}}
+\begin{center}
+{\LARGE\bfseries 期末复习强化卷 — 文法$\rightleftarrows$语言 8 题 + LL(1) 1 题（附答案与解析）}
+\end{center}
+
+\begin{infobox}
+\textbf{用途}：期末冲刺第二份自测卷，共 9 题——\textbf{文法 $\to$ 语言 4 道、语言 $\to$ 文法 4 道、LL(1) 1 道}。全部为新题：参考《第二章PPT练习-完整题解》的题型与难度出题、\textbf{不重复其原题}；每题附\textbf{答案}与\textbf{解析}。\\
+\textbf{配套}：《期末复习-模拟卷》·《期末复习专题》·《第二章PPT练习-完整题解》·《02-文法和语言》·《04-语法分析-自顶向下》\\
+\textbf{做题方法}：文法$\rightleftarrows$语言题按``读递归模式 / 定骨架 \imp{} 写产生式 \imp{} 正反向验证 \imp{} 判类型''走（语言描述与文法写法均不唯一，多写法/多解见各题）；LL(1) 题按``FIRST \imp{} FOLLOW \imp{} SELECT \imp{} 判定 \imp{} 表''完整链条作答。
+\end{infobox}
+
+\section{\texorpdfstring{文法 $\to$ 语言，并判断类型（第 1--4 题）}{文法→语言，并判断类型（第 1–4 题）}}
+
+\begin{qbox}
+{\large\bfseries 第 1 题}\quad $G[S]$：$S \to Sa \mid Sb \mid c$。求 $L(G)$，并判断文法类型与语言类型。
+\end{qbox}
+
+\textbf{答案}（多种等价写法）：
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{c p{11.2cm}}
+\toprule
+\textbf{形式} & \textbf{写法} \\
+\midrule
+正规式 & $L(G)=c(a \mid b)^*$ \\
+集合式 & $\{c\,w \mid w \in \{a,b\}^*\}$ \\
+文字 & c 后随任意个 a、b 的串（含单独的 \texttt{c}） \\
+例子 & \ok：\texttt{c}、\texttt{ca}、\texttt{cb}、\texttt{cab}、\texttt{caa}；\bad：\texttt{a}、\texttt{acb} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+文法 \textbf{3 型（左线性）}、语言\textbf{正规}。
+
+\textbf{解析}：
+\begin{itemize}
+\item $S \to c$ 是出口；$S \to Sa$、$S \to Sb$ 每步在已有串\textbf{右端}追加一个字符（递归非终结符在右部\textbf{最左端}）。
+\item \textbf{正向}：每用一次 $Sa/Sb$ 多一个 $a/b$ \imp{} 生成 $c$ 后接任意 $a/b$ 串；\textbf{反向}：任意 $c w$，把 $w$ 的字符从右往左逐个用 $Sa/Sb$ 追回，最后 $S \to c$ 收口 \imp{} 可推出。
+\item \textbf{边界}：$w = \varepsilon$ \imp{} \texttt{c} \ok。
+\item \textbf{类型}：三条产生式都是 $A \to Ba \mid a$ 形（\texttt{Sa} = $B \cdot a$，\texttt{Sb} = $B \cdot b$，\texttt{c} = $a$）\imp{} \textbf{3 型（左线性正规文法）}；语言有正规式 $c(a \mid b)^*$ \imp{} 正规。
+\end{itemize}
+
+\begin{warnbox}[方向别判反]
+$S \to Sa$ 的递归非终结符在\textbf{左}、终结符在\textbf{右}——这是\textbf{左线性}（$A \to Ba \mid a$），不是右线性。左线性同属 3 型，但卷面写``右线性''就错了（对照专题 2.1 知识点对 3 型的两种形式）。
+\end{warnbox}
+
+\begin{qbox}
+{\large\bfseries 第 2 题}\quad $G[S]$：$S \to aSbc \mid abc$。求 $L(G)$，并判断文法类型与语言类型。
+\end{qbox}
+
+\textbf{答案}（多种等价写法）：
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{c p{11.2cm}}
+\toprule
+\textbf{形式} & \textbf{写法} \\
+\midrule
+集合式 & $L(G)=\{a^n (bc)^n \mid n \ge 1\}$ \\
+文字 & a 与 bc 块 1:1 配对、a 全在前（$n \ge 1$） \\
+例子 & \ok：\texttt{abc}、\texttt{aabcbc}、\texttt{aaabcbcbc}；\bad：\texttt{a}、\texttt{ab}、\texttt{aabbc} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+文法 \textbf{2 型}、语言\textbf{非正规}。
+
+\textbf{解析}：
+\begin{itemize}
+\item 出口 \texttt{abc}（$n=1$）；每套一层 $aSbc$ 在最前加一个 $a$、最后加一对 $bc$ \imp{} $a$ 与 $(bc)$ 块 $1{:}1$ 配对。
+\item \textbf{正向}：归纳即得全部 $a^n(bc)^n$；\textbf{反向}：串的首字符必是 $a$、末两字符必是 \texttt{bc}，剥掉一层得 $a^{n-1}(bc)^{n-1}$，归纳落到 \texttt{abc}。
+\item \textbf{边界}：$n \ge 1$ \imp{} $\varepsilon$、\texttt{a}、\texttt{ab} 都推不出 \ok。核对 $n=2$：$S \to aSbc \to a(abc)bc = \texttt{aabcbc}$ \ok。
+\item \textbf{类型}：$S \to aSbc$ 右部非右线性，左部为单个非终结符 \imp{} \textbf{2 型}；$a$ 与 $bc$ 数目需配对计数 \imp{} 语言\textbf{非正规}。
+\end{itemize}
+
+\begin{tipbox}[\texorpdfstring{和 $a^n b^n c^n$ 的区别（关键）}{和 a^n b^n c^n 的区别（关键）}]
+本语言的后两段是\textbf{交织}的 $(bc)^n$，一条 $S \to aSbc$ 就能配平 \imp{} \textbf{上下文无关}；而 $a^n b^n c^n$ 两段要分别配平、CFG 做不到，必须 1 型文法才能描述（对照题解第 4 题 (b)）。串形别看走眼：\texttt{aabcbc} $\in L$，\texttt{aabbc} $\notin L$。
+\end{tipbox}
+
+\begin{qbox}
+{\large\bfseries 第 3 题}\quad $G[S]$：$S \to S;S \mid a$。求 $L(G)$，并判断文法类型与语言类型；$G$ 是否二义文法？
+\end{qbox}
+
+\textbf{答案}（多种等价写法）：
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{c p{11.2cm}}
+\toprule
+\textbf{形式} & \textbf{写法} \\
+\midrule
+正规式 & $L(G)=a( ; a)^*$ \\
+文字 & 由分号分隔的 a 组成的非空串 \\
+例子 & \ok：\texttt{a}、\texttt{a;a}、\texttt{a;a;a}；\bad：$\varepsilon$、\texttt{;}、\texttt{a;;a} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+文法 \textbf{2 型（非 3 型）}、语言\textbf{正规}、\textbf{$G$ 是二义文法}。
+
+\textbf{解析}：
+\begin{itemize}
+\item $S \to a$ 出口；$S \to S;S$ 把两段用 \texttt{;} 拼接 \imp{} 任意 $\ge 1$ 个 $a$ 用 \texttt{;} 串起。
+\item \textbf{正向}：逐次用 $S;S$ 拼接即得 $a( ; a)^*$；\textbf{反向}：对 $a;a;\cdots;a$，任取一个分号用 $S \to S;S$ 二分，递归到全是 $a$ \imp{} 只产生这类串。
+\item \textbf{类型}：$S \to S;S$ 右部既不是 $aB$ 形也不是 $Ba$ 形（$S$、\texttt{;}、$S$ 三符号）\imp{} 非 3 型，左部单个非终结符 \imp{} \textbf{2 型}；语言 $a( ; a)^*$ 可用正规式表达 \imp{} \textbf{正规}——``语言正规 $\ne$ 文法 3 型''的又一实例。
+\item \textbf{二义}：句子 \texttt{a;a;a} 有两棵语法树——左分 \texttt{((S;S);S)} 与右分 \texttt{(S;(S;S))} \imp{} \textbf{二义文法}（对分号连接链的结合方式没有规定）。
+\end{itemize}
+
+\begin{qbox}
+{\large\bfseries 第 4 题}\quad $G[S]$：$S \to aSc \mid B$，$B \to bB \mid \varepsilon$。求 $L(G)$，并判断文法类型与语言类型。
+\end{qbox}
+
+\textbf{答案}（多种等价写法）：
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{c p{11.2cm}}
+\toprule
+\textbf{形式} & \textbf{写法} \\
+\midrule
+集合式 & $L(G)=\{a^n b^m c^n \mid n \ge 0,\ m \ge 0\}$ \\
+文字 & 外层 a、c 等数配对，中间夹任意个 b（可为 0） \\
+例子 & \ok：$\varepsilon$、\texttt{b}、\texttt{ac}、\texttt{abc}、\texttt{abbc}、\texttt{aacc}；\bad：\texttt{ca}、\texttt{abb} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+文法 \textbf{2 型}、语言\textbf{非正规}。
+
+\textbf{解析}：
+\begin{itemize}
+\item $S \to aSc$ 每层配一对 $a$、$c$；出口 $S \to B$ 转入 $B$ 段，$B \to bB \mid \varepsilon$ 产出任意个 $b$（含 0 个）。串形：外层 $a \cdots c$ 夹着中间任意 $b$ 串。
+\item \textbf{正向}：用 $k$ 次 $aSc$ 再 $S \to B$、$B$ 产 $m$ 个 $b$ \imp{} $a^k b^m c^k$；\textbf{反向}：串若以 $a$ 开头必以 $c$ 结尾（$n \ge 1$），剥一层递归；若无 $a$ 则整串是 $B$ 段（$b^m$ 或 $\varepsilon$）\imp{} 归纳成立。
+\item \textbf{边界}：\textbf{$\varepsilon \in L(G)$}（$S \to B \to \varepsilon$）；$m$ 可为 $0$（\texttt{ac}、\texttt{aacc}…）；$n$ 可为 $0$（纯 $b$ 串 \texttt{b}、\texttt{bb}、$\varepsilon$）。
+\item \textbf{类型}：$S \to aSc$ 非右线性 \imp{} \textbf{2 型}；$a$、$c$ 计数配对 \imp{} 语言\textbf{非正规}（中间 $b$ 串不限长只是``填充''，不影响判定）。
+\end{itemize}
+
+\begin{warnbox}[出口不能图省事]
+若写 $S \to aSc \mid b \mid \varepsilon$：内层每次只能贡献\textbf{一个} $b$，得到的是``两边 $a$、$c$ 等数、中间至多一个 $b$''——\texttt{abc} 能推，但 \texttt{abbc} 推不出 \bad。$b^m$ 要\textbf{任意多个}，必须独立非终结符 $B$ 来递归。
+\end{warnbox}
+
+\section{\texorpdfstring{语言 $\to$ 文法，并判断类型（第 5--8 题，答案均不唯一）}{语言→文法，并判断类型（第 5–8 题，答案均不唯一）}}
+
+\begin{qbox}
+{\large\bfseries 第 5 题}\quad 写一文法 $G$，使 $L(G)=\{w \in \{a,b\}^* \mid w \text{ 以 ab 结尾}\}$，并判断文法类型。
+\end{qbox}
+
+\textbf{答案}（不唯一）：
+\[
+\begin{aligned}
+S &\to aS \mid bS \mid aB\\
+B &\to b
+\end{aligned}
+\]
+\textbf{另一种}：$S \to aS \mid bS \mid ab$（更简，但右部 \texttt{ab} 是两个终结符 \imp{} 只是 \textbf{2 型}）。
+
+\textbf{解析}：
+\begin{itemize}
+\item 拆两段：\textbf{前缀任意}（$S \to aS \mid bS$ 在前面逐字符加）+ \textbf{固定尾 \texttt{ab}}（$S \to aB \to ab$ 落底）。
+\item \textbf{正向}：$S \to aS/bS$ 反复加前缀，最后 $S \to aB$ 产出结尾的 $ab$ \imp{} $(a \mid b)^* ab$；\textbf{反向}：$w = x \cdot ab$，$x$ 为空直接 $S \to aB$；$x = c\, x'$ 则 $S \to cS$ 递归剥首字符，剥完接 $aB$。
+\item \textbf{边界}：最小串 \texttt{ab} \ok；$\varepsilon$、\texttt{a}、\texttt{b}、\texttt{ba} 均推不出 \ok（$S$ 每条路径都必须经过 $aB$）。
+\item \textbf{类型}：全部 $A \to aB \mid a$ 形 \imp{} \textbf{3 型（正规文法）}；语言正规（3 状态 DFA：记住是否刚读过 $a$）。
+\end{itemize}
+
+\begin{qbox}
+{\large\bfseries 第 6 题}\quad 写一文法 $G$，使 $L(G)=\{a^n b a^n \mid n \ge 0\}$（中间一个 $b$、两边 $a$ 等数：\texttt{b}、\texttt{aba}、\texttt{aabaa}…），并判断文法类型。
+\end{qbox}
+
+\textbf{答案}（不唯一）：
+\[ S \to aSa \mid b \]
+\textbf{另一种}：$S \to A$，$A \to aAa \mid b$（多包一层，语言相同）。
+
+\textbf{解析}：
+\begin{itemize}
+\item $b$ 是中心，$aSa$ 每层在\textbf{两头同时}各加一个 $a$ \imp{} 两边永远等数。
+\item \textbf{正向}：$n=0$ 用 $S \to b$；$n$ 层包裹 \imp{} $a^n b a^n$；\textbf{反向}：串首 $a$ 尾 $a$、中间恰一个 $b$ \imp{} 剥掉外层一对 $a$ 递归，最终落到 $b$。
+\item \textbf{边界}：$n=0$ \imp{} \texttt{b} \ok；\texttt{ab}、\texttt{ba}、\texttt{aab} 推不出 \ok。
+\item \textbf{核对}：$n=2$：$S \Rightarrow aSa \Rightarrow a(aSa)a \Rightarrow a(aba)a = \texttt{aabaa}$ \ok。
+\item \textbf{类型}：$aSa$ 非右线性，左部单个非终结符 \imp{} \textbf{2 型}；两边 $a$ 数必须相等 \imp{} 语言\textbf{非正规}（DFA 记不住左边有几个 $a$）。
+\end{itemize}
+
+\begin{qbox}
+{\large\bfseries 第 7 题}\quad 写一文法 $G$，使 $L(G)=\{a^m b^n c^{m+n} \mid m \ge 0,\ n \ge 0\}$（$c$ 的个数 = $a$、$b$ 个数之\textbf{和}），并判断文法类型。
+\end{qbox}
+
+\textbf{答案}（不唯一）：
+\[
+\begin{aligned}
+S &\to aSc \mid T\\
+T &\to bTc \mid \varepsilon
+\end{aligned}
+\]
+\textbf{另一种}：$S \to aSc \mid bTc \mid \varepsilon$，$T \to bTc \mid \varepsilon$（把``转入 T 段''并成一条，语言相同）。
+
+\textbf{解析}：
+\begin{itemize}
+\item 读结构：外层由 $S \to aSc$ 每层配一对 $a$、$c$（共 $m$ 层）；落到 $T$ 后内层由 $T \to bTc$ 每层配一对 $b$、$c$（共 $n$ 层）；$T \to \varepsilon$ 允许 $m$、$n$ 取 $0$。
+\item \textbf{正向}：$m$ 次 $aSc$ 后 $S \to T$，$n$ 次 $bTc$ 后 $T \to \varepsilon$ \imp{} $a^m b^n c^{n} c^{m} = a^m b^n c^{m+n}$ \ok；\textbf{反向}：串首若为 $a$ 必尾为 $c$，剥一层外层递归；转入 $T$ 段后同理剥 $b \cdots c$。
+\item \textbf{核对}：$m=1,\ n=1$ \imp{} $S \Rightarrow aSc \Rightarrow aTc \Rightarrow abTcc$ \imp{} \texttt{abcc}（$c^2 = 1+1$）\ok；$m=0,\ n=1$ \imp{} \texttt{bc} \ok；$m=1,\ n=0$ \imp{} \texttt{ac} \ok；$m=n=0$ \imp{} \textbf{$\varepsilon$} \ok（$S \to T \to \varepsilon$，\textbf{$\varepsilon$ 在语言中}）。
+\item \textbf{类型}：$S \to aSc$ 非右线性 \imp{} \textbf{2 型}；$m+n$ 两段计数相加配对 \imp{} 语言\textbf{非正规}。
+\end{itemize}
+
+\begin{qbox}
+{\large\bfseries 第 8 题}\quad 写一文法 $G$，使 $L(G)=\{w \in \{0,1\}^* \mid |w| \text{ 是 3 的倍数}\}$（含 $\varepsilon$），并判断文法类型。
+\end{qbox}
+
+\textbf{答案}（不唯一）：
+\[
+\begin{aligned}
+S &\to 0A \mid 1A \mid \varepsilon\\
+A &\to 0B \mid 1B\\
+B &\to 0S \mid 1S
+\end{aligned}
+\]
+\textbf{另一种}：语言等价写成 $((0 \mid 1)^3)^*$；文法的状态命名/转移顺序互换（如 A、B 对调并同步改转移）都等价。
+
+\textbf{解析}：
+\begin{itemize}
+\item 按``已读长度 mod 3''设三个状态：\textbf{S}（余 0，也是接受状态）、\textbf{A}（余 1）、\textbf{B}（余 2）。每读一个字符状态 $+1$ 并循环：$S \to 0A/1A$，$A \to 0B/1B$，$B \to 0S/1S$；余 0 时可用 $S \to \varepsilon$ 结束。
+\item \textbf{正向}：每步消耗一个字符、状态 $S \to A \to B \to S$ 循环，能结束（回到 $S$ 用 $\varepsilon$）当且仅当长度是 3 的倍数；\textbf{反向}：把串按每 3 个字符分段，每段三步从 $S$ 绕回 $S$，最后 $S \to \varepsilon$ 收口。
+\item \textbf{核对}：$\varepsilon$（$S \to \varepsilon$）\ok、\texttt{011}（$S \Rightarrow 0A \Rightarrow 01B \Rightarrow 011S \Rightarrow 011$）\ok、\texttt{111000} \ok；\texttt{01}、\texttt{1111} 推不出（$A$、$B$ 没有 $\varepsilon$ 或直接收尾的产生式，走不回 $S$ 就断不了）\ok。
+\item \textbf{类型}：每条右部都是 $aB$ / $a$（或 $\varepsilon$）形 \imp{} \textbf{3 型（正规文法）}；语言正规。
+\end{itemize}
+
+\section{LL(1) 文法：FIRST / FOLLOW / SELECT / 判定 / 预测分析表（第 9 题）}
+
+\begin{qbox}
+{\large\bfseries 第 9 题}\quad 已知文法 $G[E]$：
+\[ \begin{aligned}
+E  &\to T E'\\
+E' &\to + T E' \mid \varepsilon\\
+T  &\to F T'\\
+T' &\to * F T' \mid \varepsilon\\
+F  &\to ( E ) \mid i
+\end{aligned} \]
+(1) 求各非终结符的 \FRname 集；(2) 求各非终结符的 \FOname 集；(3) 求各产生式的 SELECT 集；(4) 判断 $G$ 是否为 LL(1) 文法，并说明理由；(5) 构造 LL(1) 预测分析表。
+\end{qbox}
+
+\textbf{解 (1) \FRname 集}（先标记可空：$F$、$T$ 不可空；$T'$、$E'$ 可空）：
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{c l p{8.6cm}}
+\toprule
+\textbf{非终结符} & \textbf{\FRname} & \textbf{依据} \\
+\midrule
+$F$  & $\{(,\ i\}$            & $F \to (E)$、$F \to i$ 直接加入 \\
+$T'$ & $\{*,\ \varepsilon\}$  & $T' \to *FT'$ 加 $*$；$T' \to \varepsilon$ 使 $T'$ 可空 \\
+$T$  & $\{(,\ i\}$            & $T \to FT'$：\FR{F} 不含 $\varepsilon$，直接取 \FR{F} \\
+$E'$ & $\{+,\ \varepsilon\}$  & $E' \to +TE'$ 加 $+$；$E' \to \varepsilon$ 使 $E'$ 可空 \\
+$E$  & $\{(,\ i\}$            & $E \to TE'$：\FR{T} 不含 $\varepsilon$，直接取 \FR{T} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{解 (2) \FOname 集}（从开始符号 $E$ 出发，沿``某 $X$ 后面跟什么''传播；\textbf{可空则再并上后面的 \FOname}——本题两条传播链是易错点）：
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{c l p{8.2cm}}
+\toprule
+\textbf{非终结符} & \textbf{\FOname} & \textbf{依据} \\
+\midrule
+$E$  & $\{\#,\ )\}$            & （1）$E$ 是开始符号 \imp{} $\#$；（2）$F \to (E)$ 中 $E$ 后是 $)$ \imp{} $)$ \\
+$E'$ & $\{\#,\ )\}$            & $E \to TE'$ 中 $E'$ 在右部末端 \imp{} $\FO{E'} = \FO{E}$ \\
+$T$  & $\{+,\#,\ )\}$          & $E \to TE'$：$T$ 后跟 $E'$ \imp{} 取 $\FR{E'} \setminus \{\varepsilon\} = \{+\}$；又 \textbf{$E'$ 可空} \imp{} 再并 $\FO{E} = \{\#, )\}$ \\
+$T'$ & $\{+,\#,\ )\}$          & $T \to FT'$ 中 $T'$ 在末端 \imp{} $\FO{T'} = \FO{T}$ \\
+$F$  & $\{*,+,\#,\ )\}$        & $T \to FT'$：$F$ 后是 $T'$ \imp{} 取 $\FR{T'} \setminus \{\varepsilon\} = \{*\}$；又 \textbf{$T'$ 可空} \imp{} 再并 $\FO{T} = \{+,\#, )\}$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{解 (3) SELECT 集}（非 $\varepsilon$ 产生式取 $\mathrm{FIRST}(\text{右部})$；$\varepsilon$ 产生式取 $\mathrm{FOLLOW}(\text{左部})$）：
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{l l l}
+\toprule
+\textbf{产生式} & \textbf{计算} & \textbf{SELECT} \\
+\midrule
+$E \to T E'$     & \FR{TE'}     & $\{(,\ i\}$ \\
+$E' \to + T E'$  & \FRname        & $\{+\}$ \\
+$E' \to \varepsilon$ & \FO{E'}  & $\{\#,\ )\}$ \\
+$T \to F T'$     & \FR{FT'}     & $\{(,\ i\}$ \\
+$T' \to * F T'$  & \FRname        & $\{*\}$ \\
+$T' \to \varepsilon$ & \FO{T'}  & $\{+,\#,\ )\}$ \\
+$F \to ( E )$    & \FRname        & $\{(\}$ \\
+$F \to i$        & \FRname        & $\{i\}$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{解 (4) 判定}：相同左部的产生式两两求 SELECT 集交集：
+\begin{itemize}
+\item $E$：只有 $E \to TE'$ 一条，无交集可算；
+\item $E'$：$SELECT(E' \to +TE') \cap SELECT(E' \to \varepsilon) = \{+\} \cap \{\#, )\} = \emptyset$；
+\item $T$：只有 $T \to FT'$ 一条，无交集可算；
+\item $T'$：$SELECT(T' \to {*}FT') \cap SELECT(T' \to \varepsilon) = \{*\} \cap \{+,\#, )\} = \emptyset$；
+\item $F$：$SELECT(F \to (E)) \cap SELECT(F \to i) = \{( \} \cap \{i\} = \emptyset$。
+\end{itemize}
+全部为空 \imp{} \textbf{相同左部的任意两产生式 SELECT 集交集为空，所以 $G$ 是 LL(1) 文法}。
+
+\textbf{解 (5) LL(1) 预测分析表}（$M[\text{非终结符},\ \text{终结符}]$，每格恰好一个产生式，空格为报错）：
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{c|cccccc}
+\toprule
+        & $($          & $i$       & $+$            & $*$             & $)$           & $\#$ \\
+\midrule
+\textbf{E}  & $E \to TE'$ & $E \to TE'$ &                &                 &               & \\
+\textbf{E'} &             &             & $E' \to +TE'$  &                 & $E' \to \varepsilon$ & $E' \to \varepsilon$ \\
+\textbf{T}  & $T \to FT'$ & $T \to FT'$ &                &                 &               & \\
+\textbf{T'} &             &             & $T' \to \varepsilon$ & $T' \to *FT'$ & $T' \to \varepsilon$ & $T' \to \varepsilon$ \\
+\textbf{F}  & $F \to (E)$ & $F \to i$   &                &                 &               & \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+（逐格来源：$E$、$T$ 按 \FRname 填；$E'$、$T'$ 的 $\varepsilon$ 行按 \FOname 填；$F$ 按两条 \FRname 分列。）
+
+\begin{warnbox}
+\begin{enumerate}
+\item \textbf{\FO{T}、\FO{F} 的``可空传播''}是全题最大失分点：$E'$ 可空才让 \texttt{+、\#、)} 进入 \FO{T}；$T'$ 可空才让 \texttt{+、\#、)} 进入 \FO{F}。漏传播 \imp{} $\mathrm{SELECT}(T' \to \varepsilon)$ 算错 \imp{} 判定跟着错。
+\item \textbf{$\varepsilon$ 产生式的 SELECT 用 \FOname 不是 \FRname}（$\FR{\varepsilon} = \emptyset$ 没用）。
+\item 判定写法：同左部产生式的 SELECT 交集\textbf{逐对列出}、全部为空，再下结论。
+\end{enumerate}
+\end{warnbox}
+
+\section{强化卷·答案速查}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\setlength{\tabcolsep}{6pt}
+\begin{tabular}{@{}c p{13.6cm}@{}}
+\toprule
+\textbf{题号} & \textbf{答案要点} \\
+\midrule
+1 & $L = c(a \mid b)^*$（多写法见题）；\textbf{3 型（左线性）}、正规 \\
+2 & $L = \{a^n (bc)^n \mid n \ge 1\}$（多写法见题）；\textbf{2 型}、非正规（区别于 $a^n b^n c^n$） \\
+3 & $L = \{a( ; a)^*\}$（多写法见题）；\textbf{2 型}（非 3 型）、语言正规、\textbf{二义} \\
+4 & $L = \{a^n b^m c^n \mid n,m \ge 0\}$（\textbf{含 $\varepsilon$}，多写法见题）；\textbf{2 型}、非正规（出口须经独立 $B$） \\
+5 & $S \to aS \mid bS \mid aB$，$B \to b$（另解 $S \to aS \mid bS \mid ab$，2 型）；\textbf{3 型}、正规 \\
+6 & $S \to aSa \mid b$（另解 $S \to A$，$A \to aAa \mid b$）；\textbf{2 型}、非正规 \\
+7 & $S \to aSc \mid T$，$T \to bTc \mid \varepsilon$（另解 $S \to aSc \mid bTc \mid \varepsilon$）；\textbf{2 型}、非正规（\textbf{含 $\varepsilon$}） \\
+8 & $S \to 0A \mid 1A \mid \varepsilon$，$A \to 0B \mid 1B$，$B \to 0S \mid 1S$（另解 $((0 \mid 1)^3)^*$）；\textbf{3 型}、正规（mod 3 状态机） \\
+9 & FIRST/FOLLOW/SELECT 见解(1)(2)(3)；同左部 SELECT 交集全空 \imp{} \textbf{是 LL(1) 文法}（判定见解(4)）；表见解(5) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+
+\end{document}

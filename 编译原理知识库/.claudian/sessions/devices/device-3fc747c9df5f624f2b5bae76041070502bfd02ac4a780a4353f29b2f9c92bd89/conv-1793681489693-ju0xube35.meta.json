@@ -1,0 +1,24 @@
+{
+  "id": "conv-1793681489693-ju0xube35",
+  "providerId": "claude",
+  "title": "编译原理算符优先分析与文法类型练习题",
+  "titleGenerationStatus": "success",
+  "createdAt": 1793681489697,
+  "lastActivityAt": 1793788754459,
+  "sessionId": "c5e3bdab-d4d2-46c5-8578-34ae35d03c01",
+  "selectedModel": "sonnet",
+  "providerState": {
+    "providerSessionId": "c5e3bdab-d4d2-46c5-8578-34ae35d03c01"
+  },
+  "linkedContentPath": "期末复习专题.md",
+  "usage": {
+    "model": "sonnet",
+    "inputTokens": 843,
+    "cacheCreationInputTokens": 0,
+    "cacheReadInputTokens": 275072,
+    "contextWindow": 1000000,
+    "contextTokens": 275915,
+    "percentage": 28,
+    "contextWindowIsAuthoritative": true
+  }
+}

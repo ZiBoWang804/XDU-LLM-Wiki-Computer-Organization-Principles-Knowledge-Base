@@ -1,0 +1,24 @@
+{
+  "id": "conv-1791731865388-wmxyhv9pn",
+  "providerId": "claude",
+  "title": "Identify grammar type of S→ε production",
+  "titleGenerationStatus": "success",
+  "createdAt": 1791731865390,
+  "lastActivityAt": 1793435558705,
+  "sessionId": "8e4fa5e8-9a06-4d8c-ae1b-eb1e78b79f56",
+  "selectedModel": "fable",
+  "providerState": {
+    "providerSessionId": "8e4fa5e8-9a06-4d8c-ae1b-eb1e78b79f56"
+  },
+  "linkedContentPath": "02-文法和语言.md",
+  "usage": {
+    "model": "sonnet",
+    "inputTokens": 61024,
+    "cacheCreationInputTokens": 0,
+    "cacheReadInputTokens": 44032,
+    "contextWindow": 1000000,
+    "contextTokens": 105056,
+    "percentage": 11,
+    "contextWindowIsAuthoritative": true
+  }
+}

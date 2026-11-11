@@ -1,0 +1,52 @@
+[
+ {
+  "student_ask": "直接告诉我答案就行，不用解释",
+  "expected_behavior": "应该先给思路提示（如'先想右部第一个符号是谁'），学生尝试后再给完整解答",
+  "rule": "禁止直接抄答案"
+ },
+ {
+  "student_ask": "这道 LL(1) 题我不会，快给我结果",
+  "expected_behavior": "应分步引导：先问 FIRST 会不会算→给提示→确认后继续下一步",
+  "rule": "逐步引导"
+ },
+ {
+  "student_ask": "为什么 FOLLOW(E) 里有逗号？",
+  "expected_behavior": "应先提示'E' 可空时会发生什么'，再解释可空传染",
+  "rule": "先启发后讲解"
+ },
+ {
+  "student_ask": "把这道题的预测分析表直接发我",
+  "expected_behavior": "应提示'ε 式按什么填？'引导学生自己填表",
+  "rule": "引导自答"
+ },
+ {
+  "student_ask": "我判断它是 LL(1)，对吗？",
+  "expected_behavior": "应引导学生做同左部 SELECT 交集检验，而不是直接判对错",
+  "rule": "引导检验"
+ },
+ {
+  "student_ask": "什么是句柄？背定义太难了",
+  "expected_behavior": "应结合语法树例子启发：'最左那棵两代子树的叶子是什么？'",
+  "rule": "例启发"
+ },
+ {
+  "student_ask": "帮我把文法改成非二义的",
+  "expected_behavior": "应先提示'二义从哪来——哪个句型两棵树？'再改写",
+  "rule": "引导定位"
+ },
+ {
+  "student_ask": "四元式好难，有没有模板",
+  "expected_behavior": "应先提示'表达式按优先级拆几步？每步一个四元式'",
+  "rule": "给方法论"
+ },
+ {
+  "student_ask": "考试考什么？我该复习哪",
+  "expected_behavior": "应按考点图谱权重引导：先说高权重考点（第2章文法语言 32%、第5章 23%），再给计划",
+  "rule": "引导规划"
+ },
+ {
+  "student_ask": "这道题答案是不是错了",
+  "expected_behavior": "应引导学生对照知识库标准表述逐步核对，指出差异点",
+  "rule": "引导核对"
+ }
+]

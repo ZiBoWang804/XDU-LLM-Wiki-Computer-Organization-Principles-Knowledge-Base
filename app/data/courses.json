@@ -1,0 +1,14 @@
+[
+ {
+  "id": "compiler",
+  "name": "编译原理",
+  "description": "《编译原理》第3版 王生原等 · 清华大学出版社",
+  "kb_dir": "D:\\wzb\\编译原理\\编译原理知识库"
+ },
+ {
+  "id": "c50750",
+  "name": "数据结构",
+  "description": "测试课程",
+  "kb_dir": "D:\\wzb\\编译原理\\courses\\c50750"
+ }
+]

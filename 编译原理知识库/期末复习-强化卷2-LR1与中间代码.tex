@@ -1,0 +1,848 @@
+% !TEX program = xelatex
+\documentclass[12pt,a4paper,fontset=windows]{ctexart}
+\usepackage{amsmath,amssymb}
+\usepackage[a4paper,margin=2.2cm,top=2.6cm,bottom=2.4cm,headheight=15pt]{geometry}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage[most]{tcolorbox}
+\usepackage{fancyhdr}
+\usepackage[hidelinks,unicode]{hyperref}
+\hypersetup{pdftitle={期末复习强化卷2 — LR1 与中间代码（附答案与解析）}}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[C]{\small 期末复习强化卷2 — 文法$\rightleftarrows$语言 + LR(1) + 逆波兰 + 四元式（附答案与解析）}
+\fancyfoot[C]{\small —~\thepage~—}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\setlist[enumerate]{itemsep=1pt,topsep=3pt,leftmargin=2.2em}
+\setlist[itemize]{itemsep=2pt,topsep=3pt,leftmargin=1.6em}
+
+\newcommand{\ok}{\ensuremath{\checkmark}}
+\newcommand{\bad}{\ensuremath{\times}}
+\newcommand{\imp}{\ensuremath{\Rightarrow}}
+\newcommand{\FIRST}{\mathrm{FIRST}}
+
+\newtcolorbox{qbox}[1][题目]{%
+  enhanced,breakable,colback=gray!8,colframe=gray!55!black,
+  boxrule=0.6pt,arc=2pt,left=7pt,right=7pt,top=5pt,bottom=5pt,
+  before skip=8pt,after skip=8pt,
+  title={\bfseries #1},coltitle=black,colbacktitle=gray!25,fonttitle=\bfseries}
+\newtcolorbox{warnbox}[1][本题易错]{%
+  enhanced,breakable,colback=yellow!12,colframe=orange!75!black,
+  boxrule=0.7pt,arc=2pt,left=7pt,right=7pt,top=5pt,bottom=5pt,
+  before skip=8pt,after skip=8pt,
+  title={\bfseries #1},coltitle=black,colbacktitle=yellow!35,fonttitle=\bfseries}
+\newtcolorbox{tipbox}[1][要点提示]{%
+  enhanced,breakable,colback=blue!5,colframe=blue!50!black,
+  boxrule=0.7pt,arc=2pt,left=7pt,right=7pt,top=5pt,bottom=5pt,
+  before skip=8pt,after skip=8pt,
+  title={\bfseries #1},coltitle=black,colbacktitle=blue!15,fonttitle=\bfseries}
+\newtcolorbox{infobox}{%
+  enhanced,breakable,colback=gray!6,colframe=gray!45!black,
+  boxrule=0.5pt,arc=1mm,left=7pt,right=7pt,top=5pt,bottom=5pt,
+  before skip=6pt,after skip=8pt}
+
+\begin{document}
+
+\begin{center}
+{\LARGE\bfseries 期末复习强化卷2 — 文法$\rightleftarrows$语言 6 题 + LR(1) 3 题 + 逆波兰式 3 题 + 四元式 3 题（附答案与解析）}
+\end{center}
+
+\begin{infobox}
+\textbf{用途}：期末冲刺第三份自测卷，共 15 题——\textbf{文法 $\to$ 语言 3 道、语言 $\to$ 文法 3 道、LR(1) 3 道（必考重点）、逆波兰式 3 道、四元式 3 道}。全部为新题，不重复《期末复习-模拟卷》《期末复习-强化卷-文法语言与LL1》《第二章PPT练习-完整题解》《分析设计题题库》《应用题题库》的原题；每题附\textbf{答案}与\textbf{解析}。\\
+\textbf{配套}：《期末复习-模拟卷》·《期末复习-强化卷-文法语言与LL1》·《期末复习专题》·《05-语法分析-自底向上》·《07-语义分析与中间代码生成》\\
+\textbf{做题方法}：文法$\rightleftarrows$语言按``读递归模式 $\to$ 写产生式 $\to$ 正反向验证 $\to$ 判类型''；\textbf{LR(1)} 按``增广文法 $\to$ 项目集（含展望符）$\to$ DFA $\to$ 三级判定 $\to$ 分析表 $\to$ 分析过程''；逆波兰按``画树（优先级+结合性）$\to$ 后序输出''；四元式按``取反条件跳、标号连续、回跳/跳过 else 别漏''。
+\end{infobox}
+
+\section{\texorpdfstring{文法 $\to$ 语言，并判断类型（第 1--3 题）}{文法→语言，并判断类型（第 1–3 题）}}
+
+\begin{qbox}
+{\large\bfseries 第 1 题}\quad $G[S]$：$S \to aS \mid bB \mid c$，$B \to bB \mid c$。求 $L(G)$，并判断文法类型与语言类型。
+\end{qbox}
+
+\textbf{答案}（多种等价写法）：
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{c p{11.2cm}}
+\toprule
+\textbf{形式} & \textbf{写法} \\
+\midrule
+集合式 & $L(G)=\{a^i b^j c \mid i,\ j \ge 0\}$ \\
+正规式 & $a^* b^* c$ \\
+文字 & 任意个 a、任意个 b 后固定跟一个 c \\
+例子 & \ok：\texttt{c}、\texttt{ac}、\texttt{bc}、\texttt{abc}、\texttt{aabc}、\texttt{abbc}；\bad：\texttt{ab}、\texttt{cb}、\texttt{cab} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+文法 \textbf{3 型（右线性）}、语言\textbf{正规}。
+
+\textbf{解析}：
+\begin{enumerate}
+\item 结构：S→aS 前端加 a；S→bB 入 b 段（B→bB 加 b，B→c 收口）；S→c 直接收口。
+\item 正向：$i$ 次 aS、$j$ 次 bB/c \imp{} $a^i b^j c$；反向：先剥首部 $i$ 个 a，$j=0$ 走 S→c，$j\ge 1$ 走 S→bB 再 $j-1$ 次 B→bB、B→c。
+\item 类型：五条右部都是 $aB$ 或 $a$ 形 \imp{} \textbf{3 型}。
+\end{enumerate}
+
+\begin{qbox}
+{\large\bfseries 第 2 题}\quad $G[S]$：$S \to aSb \mid b$。求 $L(G)$，并判断文法类型与语言类型。
+\end{qbox}
+
+\textbf{答案}（多种等价写法）：
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{c p{11.2cm}}
+\toprule
+\textbf{形式} & \textbf{写法} \\
+\midrule
+集合式 & $L(G)=\{a^n b^{n+1} \mid n \ge 0\}$（等价 $\{a^{n-1} b^{n} \mid n \ge 1\}$） \\
+文字 & a、b 交替配对后多出一个 b（b 恒比 a 多 1，a 全在前） \\
+例子 & \ok：\texttt{b}、\texttt{abb}、\texttt{aabbb}、\texttt{aaabbbb}；\bad：\texttt{ab}、\texttt{bb} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+文法 \textbf{2 型}、语言\textbf{非正规}。
+
+\textbf{解析}：
+\begin{enumerate}
+\item 结构：S→b 是出口（贡献 1 个 b）；S→aSb 每层两头各加一个 a、一个 b \imp{} b 恒多 1。
+\item 正向：$n$ 层 aSb 后落 b \imp{} $a^n b^{n+1}$；反向：首 a 尾 b 则剥一对递归，最终落到 b。
+\item 核对：n=2：$S \Rightarrow aSb \Rightarrow a(aSb)b \Rightarrow a(b)bb$ = \texttt{aabbb} \ok。
+\item 类型：S→aSb 非右线性 \imp{} \textbf{2 型}；两边计数差 1 配对 \imp{} 非正规。
+\end{enumerate}
+
+\begin{qbox}
+{\large\bfseries 第 3 题}\quad $G[S]$：$S \to abS \mid baS \mid \varepsilon$。求 $L(G)$，并判断文法类型与语言类型。
+\end{qbox}
+
+\textbf{答案}（多种等价写法）：
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{c p{11.2cm}}
+\toprule
+\textbf{形式} & \textbf{写法} \\
+\midrule
+正规式 & $L(G)=(ab \mid ba)^*$ \\
+集合式 & $\{w \mid w \text{ 每 2 字符一段，每段是 ab 或 ba}\}$（含 $\varepsilon$） \\
+例子 & \ok：\texttt{ab}、\texttt{ba}、\texttt{abab}、\texttt{abba}、\texttt{baab}、\texttt{baba}；\bad：\texttt{aabb}、\texttt{aab} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+文法 \textbf{2 型（非 3 型）}、语言\textbf{正规}。
+
+\textbf{解析}：
+\begin{enumerate}
+\item 结构：S→abS、S→baS 前端吐一个块再递归，S→$\varepsilon$ 是出口。
+\item 正反向：正向逐块吐出；反向按每 2 字符切段（必为 ab/ba），从右往左用 abS/baS 追回。
+\item 类型：右部 \texttt{abS} 是\textbf{两个终结符 + 非终结符}，不是 $A \to aB \mid a$ 形 \imp{} \textbf{不是 3 型}（语言虽正规）。
+\end{enumerate}
+
+\begin{warnbox}[语言正规 $\ne$ 文法 3 型]
+判类型判的是\textbf{文法形式}。要写 3 型须拆开：$S \to aA \mid bB \mid \varepsilon$，$A \to bS \mid b$，$B \to aS \mid a$。
+\end{warnbox}
+
+\section{\texorpdfstring{语言 $\to$ 文法，并判断类型（第 4--6 题，答案均不唯一）}{语言→文法，并判断类型（第 4–6 题，答案均不唯一）}}
+
+\begin{qbox}
+{\large\bfseries 第 4 题}\quad 写一文法 $G$，使 $L(G)=\{a^m b^n \mid n \ge m \ge 0\}$（b 不少于 a），并判断文法类型。
+\end{qbox}
+
+\textbf{答案}（不唯一）：
+\[
+\begin{aligned}
+S &\to aSb \mid T\\
+T &\to Tb \mid \varepsilon
+\end{aligned}
+\]
+\textbf{另一种}：$S \to aSb \mid T$，$T \to bT \mid \varepsilon$（b 加在 T 前端，语言相同）。文法 \textbf{2 型}、语言\textbf{非正规}。
+
+\textbf{解析}：
+\begin{enumerate}
+\item 结构：S→aSb 每层配一对 a、b（共 m 层）；T→Tb|$\varepsilon$ 只补尾部 b，补足 $n-m$ 个。
+\item 正向：$k$ 次 aSb + $T \Rightarrow b^{\,j}$ \imp{} $a^k b^{k+j}$；反向：取 $k=m$、$j=n-m$。
+\item 边界：$\varepsilon$（m=n=0）\ok；\texttt{aabb}（m=n）\ok；\texttt{aaab}（m$>$n）\bad。
+\end{enumerate}
+
+\begin{tipbox}[对比模拟卷第 4 题]
+《期末复习-模拟卷》第 4 题是 $n>m$（a 恒多）；本题 $n \ge m$（b 恒多可相等），出口 \textbf{T→$\varepsilon$ 放行 n=m}。
+\end{tipbox}
+
+\begin{qbox}
+{\large\bfseries 第 5 题}\quad 写一文法 $G$，使 $L(G)=\{ww^R \mid w \in \{a,b\}^*\}$（偶数长度回文，含 $\varepsilon$），并判断文法类型。
+\end{qbox}
+
+\textbf{答案}（不唯一）：
+\[
+S \to aSa \mid bSb \mid \varepsilon
+\]
+\textbf{另一种}：$S \to aA \mid bB \mid \varepsilon$，$A \to Sa \mid a$，$B \to Sb \mid b$（先内后外的写法）。文法 \textbf{2 型}、语言\textbf{非正规}。
+
+\textbf{解析}：
+\begin{enumerate}
+\item 结构：每层两头加相同符号（长度 $+2$），出口 $\varepsilon$ \imp{} 偶长回文。
+\item 正反向：正向对称包裹；反向剥最外层一对递归落到 $\varepsilon$。
+\item 边界：$\varepsilon$、\texttt{aa}、\texttt{bb}、\texttt{abba}、\texttt{baab} \ok；\texttt{aba}（奇长）、\texttt{ab} \bad。
+\end{enumerate}
+
+\begin{tipbox}[出口决定奇偶]
+《期末复习-模拟卷》第 7 题奇长回文出口是\textbf{单字符}；本题偶长回文出口是 \textbf{$\varepsilon$}。
+\end{tipbox}
+
+\begin{qbox}
+{\large\bfseries 第 6 题}\quad 写一文法 $G$，使 $L(G)=\{w \in \{0,1\}^* \mid w \text{ 中不含子串 } 11\}$（含 $\varepsilon$），并判断文法类型。
+\end{qbox}
+
+\textbf{答案}（不唯一）：
+\[
+\begin{aligned}
+S &\to 0S \mid 1A \mid \varepsilon\\
+A &\to 0S \mid \varepsilon
+\end{aligned}
+\]
+\textbf{另一种}：$S \to 0S \mid 10S \mid 1 \mid \varepsilon$（把``1 后必跟 0''直接写进产生式）。文法 \textbf{3 型（右线性）}、语言\textbf{正规}。
+
+\textbf{解析}：
+\begin{enumerate}
+\item 状态读法：S = 开头或刚读完 0（下个随便）；A = 刚读完 1（下个只能 0 或结束）。S→0S / S→1A / A→0S / $\varepsilon$ 收口。
+\item 正反向：正向路径不可能连读两个 1；反向逐字符走 S/A 转移。
+\item 边界：$\varepsilon$、\texttt{0}、\texttt{1}、\texttt{01}、\texttt{10}、\texttt{1010} \ok；\texttt{11}、\texttt{011}、\texttt{110} \bad；核对 \texttt{101}：$S \Rightarrow 1A \Rightarrow 10S \Rightarrow 101A \Rightarrow 101$ \ok。
+\end{enumerate}
+
+\section{\texorpdfstring{LR(1) 文法：增广文法 / 项目族 / DFA / 判定 / 分析表 / 分析过程（第 7--9 题）}{LR(1) 文法（第 7–9 题）}}
+
+\begin{infobox}
+\textbf{判定三步模板（三题通用）}：（1） \textbf{LR(0)}：指出哪几个项目集里``归约项 + 移进项（或两个归约项）''并存 $\to$ 结论；（2） \textbf{SLR(1)}：算\textbf{哪个 FOLLOW 集} $\to$ 与\textbf{哪个终结符}（冲突处移进项圆点后的符号）求交 $\to$ 写结果 $\emptyset$/非$\emptyset$ $\to$ 结论；（3） \textbf{LR(1)}：把归约项的\textbf{展望符}与移进终结符（或另一归约项展望符）求交 $\to$ 写结果 $\to$ 结论。
+\end{infobox}
+
+\subsection*{第 7 题}
+
+\begin{qbox}
+{\large\bfseries 第 7 题}\quad $G[S]$：$S \to Aa \mid bAc \mid dc \mid bda$，$A \to d$。\\
+(1) 增广文法并编号；(2) LR(1) 项目集规范族（含展望符）与 DFA；(3) 判定 LR(0)/SLR(1)/LR(1)；(4) 展望符与 LR(1) 分析表；(5) 句子 \textbf{da} 的分析过程。
+\end{qbox}
+
+\textbf{解 (1) 增广文法}：
+\[
+\begin{aligned}
+& 0.\ S' \to S \qquad 1.\ S \to Aa \qquad 2.\ S \to bAc \qquad 3.\ S \to dc \qquad 4.\ S \to bda \qquad 5.\ A \to d
+\end{aligned}
+\]
+
+终结符 $\{a,b,c,d\}$，非终结符 $\{S',S,A\}$，开始符 $S$。
+
+\textbf{解 (2) 项目集与 DFA}
+
+展望符怎么来（本题两个种子，逐个算）：
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{c c c c c}
+\toprule
+\textbf{加进来的项目} & \textbf{依据项目} & \textbf{该处 A 后跟什么} & \textbf{FIRST} & \textbf{展望符} \\
+\midrule
+$A \to \cdot d,\ a$ & $S \to \cdot Aa,\ \#$ & $a\#$ & $\{a\}$ & $a$ \\
+$A \to \cdot d,\ c$ & $S \to b \cdot Ac,\ \#$ & $c\#$ & $\{c\}$ & $c$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{同一产生式 A→d 在不同状态展望符不同}——各状态各算，别互相抄。
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{c p{11.8cm}}
+\toprule
+\textbf{项目集} & \textbf{内容（· 为圆点，逗号后为展望符）} \\
+\midrule
+I0 & $S' \to \cdot S,\ \#$；$S \to \cdot Aa,\ \#$；$S \to \cdot bAc,\ \#$；$S \to \cdot dc,\ \#$；$S \to \cdot bda,\ \#$；$A \to \cdot d,\ a$ \\
+I1 & $S' \to S\cdot,\ \#$（接受） \\
+I2 & $S \to A\cdot a,\ \#$ \\
+I3 & $S \to b\cdot Ac,\ \#$；$S \to b\cdot da,\ \#$；$A \to \cdot d,\ c$ \\
+I4 & {\boldmath $S \to d\cdot c,\ \#$}；{\boldmath $A \to d\cdot,\ a$} \\
+I5 & $S \to Aa\cdot,\ \#$ \\
+I6 & $S \to bA\cdot c,\ \#$ \\
+I7 & {\boldmath $S \to bd\cdot a,\ \#$}；{\boldmath $A \to d\cdot,\ c$} \\
+I8 & $S \to dc\cdot,\ \#$ \\
+I9 & $S \to bAc\cdot,\ \#$ \\
+I10 & $S \to bda\cdot,\ \#$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+DFA（GOTO）：I0 $\xrightarrow{S}$ I1，$\xrightarrow{A}$ I2，$\xrightarrow{b}$ I3，$\xrightarrow{d}$ I4；I2 $\xrightarrow{a}$ I5；I3 $\xrightarrow{A}$ I6，$\xrightarrow{d}$ I7；I4 $\xrightarrow{c}$ I8；I6 $\xrightarrow{c}$ I9；I7 $\xrightarrow{a}$ I10。关键状态 I4、I7（归约项与移进项并存）。
+
+\textbf{解 (3) 判定}：
+\begin{enumerate}
+\item \textbf{LR(0)}：I4 内 $A \to d\cdot$（归约）与 $S \to d\cdot c$（移进 c）并存；I7 内 $A \to d\cdot$ 与 $S \to bd\cdot a$（移进 a）并存 \imp{} 移进-归约冲突 \imp{} \textbf{不是 LR(0)}。
+\item \textbf{SLR(1)}：求 \textbf{FOLLOW(A)}：A 后可跟 a（S→Aa）、c（S→bAc）$\Rightarrow FOLLOW(A)=\{a,c\}$。与移进终结符求交：I4 处 $FOLLOW(A) \cap \{c\} = \{c\} \neq \emptyset$；I7 处 $FOLLOW(A) \cap \{a\} = \{a\} \neq \emptyset$ \imp{} 交集非空、冲突消不掉 \imp{} \textbf{不是 SLR(1)}。
+\item \textbf{LR(1)}：展望符求交：I4 处 $\{a\} \cap \{c\} = \emptyset$；I7 处 $\{c\} \cap \{a\} = \emptyset$ \imp{} 无冲突，其余各集无冲突 \imp{} \textbf{是 LR(1)}。
+\end{enumerate}
+
+\textbf{解 (4) 展望符与 LR(1) 分析表}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{c c c}
+\toprule
+\textbf{项目} & \textbf{状态} & \textbf{展望符} \\
+\midrule
+$A \to d\cdot$ & I4 & $\{a\}$ \\
+$A \to d\cdot$ & I7 & $\{c\}$ \\
+$S \to Aa\cdot$ / $S \to dc\cdot$ / $S \to bAc\cdot$ / $S \to bda\cdot$ & I5 / I8 / I9 / I10 & $\{\#\}$ \\
+$S' \to S\cdot$ & I1 & $\{\#\}$（acc） \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+分析表（s=移进，r=归约，编号同解(1)；空格为报错）：
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{c|ccccccc}
+\toprule
+状态 & $a$ & $b$ & $c$ & $d$ & $\#$ & $S$ & $A$ \\
+\midrule
+0 &  & s3 &  & s4 &  & 1 & 2 \\
+1 &  &  &  &  & acc &  &  \\
+2 & s5 &  &  &  &  &  &  \\
+3 &  &  &  & s7 &  &  & 6 \\
+4 & r5 &  & s8 &  &  &  &  \\
+5 &  &  &  &  & r1 &  &  \\
+6 &  &  & s9 &  &  &  &  \\
+7 & s10 &  & r5 &  &  &  &  \\
+8 &  &  &  &  & r3 &  &  \\
+9 &  &  &  &  & r2 &  &  \\
+10 &  &  &  &  & r4 &  &  \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{解 (5) 句子 da 的分析过程}（归约的 GOTO 单独一行：先列弹完后的栈，动作写 GOTO）：
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{c c c c p{5.6cm}}
+\toprule
+\textbf{步骤} & \textbf{状态栈} & \textbf{符号栈} & \textbf{输入} & \textbf{动作} \\
+\midrule
+1 & 0 & \# & da\# & s4：移进 d \\
+2 & 0 4 & \#d & a\# & r5：A→d（展望符 a \ok），弹 1 态 \\
+3 & 0 & \# & a\# & GOTO(0,A)=2 \\
+4 & 0 2 & \#A & a\# & s5：移进 a \\
+5 & 0 2 5 & \#Aa & \# & r1：S→Aa，弹 2 态 \\
+6 & 0 & \# & \# & GOTO(0,S)=1 \\
+7 & 0 1 & \#S & \# & acc \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{warnbox}[易错]
+\begin{enumerate}
+\item 归约只填\textbf{展望符列}：r5 在 I4 只填 a 列、I7 只填 c 列，别按 FOLLOW 填两列。
+\item 判定写全三步，每步带\textbf{状态号 + 集合 + 交运算结果}。
+\end{enumerate}
+\end{warnbox}
+
+\subsection*{第 8 题}
+
+\begin{qbox}
+{\large\bfseries 第 8 题（进阶·三非终结符·DFA 带环）}\quad $G[S]$：$S \to L{=}R \mid R$，$L \to {*}R \mid i$，$R \to L$。\\
+(1) 增广文法并编号；(2) LR(1) 项目集规范族（含展望符）与 DFA（指出环）；(3) 判定 LR(0)/SLR(1)/LR(1)；(4) 展望符与 LR(1) 分析表；(5) 句子 \textbf{i=i} 的分析过程。
+\end{qbox}
+
+\textbf{解 (1) 增广文法}：
+\[
+\begin{aligned}
+& 0.\ S' \to S \qquad 1.\ S \to L = R \qquad 2.\ S \to R \qquad 3.\ L \to * R \qquad 4.\ L \to i \qquad 5.\ R \to L
+\end{aligned}
+\]
+
+终结符 $\{=,\ *,\ i\}$，非终结符 $\{S,L,R\}$，开始符 $S$。
+
+\textbf{解 (2) 项目集与 DFA}
+
+\textbf{展望符合并展开（``=/\#'' 怎么来的，逐链算、别漏）}：
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{c c c c}
+\toprule
+\textbf{谁把 L 的产生式加进来（种子）} & \textbf{该处 L 后跟的串} & \textbf{FIRST} & \textbf{并入展望符} \\
+\midrule
+$S \to \cdot L=R,\ \#$ & $=R\#$ & $\{=\}$ & $=$ \\
+$R \to \cdot L,\ \#$（来自 $S \to \cdot R,\ \#$） & $\#$ & $\{\#\}$ & $\#$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{enumerate}
+\item 同一状态里\textbf{同一条产生式只写一次}，展望符取\textbf{并} \imp{} $L \to \cdot *R,\ =/\#$、$L \to \cdot i,\ =/\#$。
+\item \textbf{各状态各算，种子从哪来展望符就是哪套}：I6 的种子是 $S \to L=\cdot R,\ \#$（只有 \#）$\Rightarrow L \to \cdot i,\ \#$（\textbf{不是} =/\#）；I4 的种子是 I0 带来的 $L \to *\cdot R,\ =/\#$，CLOSURE 按 $\beta$=空 展开（$R \to \cdot L$ 的展望符 = 种子 =/\#，再传给 L 的产生式）\imp{} I4 全部 =/\#。
+\item I11 的种子是 $L \to *\cdot R,\ \#$ \imp{} 全部只有 \#。\textbf{成对状态（I4/I11、I5/I12、I7/I13、I8/I10）核心相同、展望符不同，是不同状态，判 LR(1) 不许合并。}
+\end{enumerate}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{c p{11.8cm}}
+\toprule
+\textbf{项目集} & \textbf{内容（=/\# 即 $\{=,\#\}$）} \\
+\midrule
+I0 & $S' \to \cdot S,\ \#$；$S \to \cdot L=R,\ \#$；$S \to \cdot R,\ \#$；$R \to \cdot L,\ \#$；$L \to \cdot *R,\ =/\#$；$L \to \cdot i,\ =/\#$ \\
+I1 & $S' \to S\cdot,\ \#$（接受） \\
+I2 & {\boldmath $S \to L\cdot =R,\ \#$}；{\boldmath $R \to L\cdot,\ \#$} \\
+I3 & $S \to R\cdot,\ \#$ \\
+I4 & $L \to *\cdot R,\ =/\#$；$R \to \cdot L,\ =/\#$；$L \to \cdot *R,\ =/\#$；$L \to \cdot i,\ =/\#$ \\
+I5 & $L \to i\cdot,\ =/\#$ \\
+I6 & $S \to L=\cdot R,\ \#$；$R \to \cdot L,\ \#$；$L \to \cdot *R,\ \#$；$L \to \cdot i,\ \#$ \\
+I7 & $L \to *R\cdot,\ =/\#$ \\
+I8 & $R \to L\cdot,\ =/\#$ \\
+I9 & $S \to L=R\cdot,\ \#$ \\
+I10 & $R \to L\cdot,\ \#$ \\
+I11 & $L \to *\cdot R,\ \#$；$R \to \cdot L,\ \#$；$L \to \cdot *R,\ \#$；$L \to \cdot i,\ \#$ \\
+I12 & $L \to i\cdot,\ \#$ \\
+I13 & $L \to *R\cdot,\ \#$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+DFA（GOTO）：I0 $\xrightarrow{S}$ I1，$\xrightarrow{L}$ I2，$\xrightarrow{R}$ I3，$\xrightarrow{*}$ I4，$\xrightarrow{i}$ I5；I2 $\xrightarrow{=}$ I6；I4 $\xrightarrow{R}$ I7，$\xrightarrow{L}$ I8，$\xrightarrow{*}$ \textbf{I4（自环）}，$\xrightarrow{i}$ I5；I6 $\xrightarrow{R}$ I9，$\xrightarrow{L}$ I10，$\xrightarrow{*}$ I11，$\xrightarrow{i}$ I12；I11 $\xrightarrow{R}$ I13，$\xrightarrow{L}$ I10，$\xrightarrow{*}$ \textbf{I11（自环）}，$\xrightarrow{i}$ I12。环：I4、I11 在 $*$ 上自环（读几个 $*$ 绕几圈）。
+
+\textbf{解 (3) 判定}：
+\begin{enumerate}
+\item \textbf{LR(0)}：I2 内 $R \to L\cdot$（归约）与 $S \to L\cdot = R$（移进 =）并存 \imp{} 移进-归约冲突 \imp{} \textbf{不是 LR(0)}。
+\item \textbf{SLR(1)}：求 \textbf{FOLLOW(R)}：R 后可跟 =（R→L 后接 S→L=R 的 =）、\#（S→R 句尾），R→L 与 L→*R 尾部互传 $\Rightarrow FOLLOW(R)=FOLLOW(L)=\{=,\#\}$。与移进终结符求交：I2 处 $FOLLOW(R) \cap \{=\} = \{=\} \neq \emptyset$ \imp{} \textbf{不是 SLR(1)}。
+\item \textbf{LR(1)}：展望符求交：I2 处 $\{\#\} \cap \{=\} = \emptyset$（R→L· 只在 \# 归约，= 只移进）\imp{} 无冲突，其余各集无冲突 \imp{} \textbf{是 LR(1)}。
+\end{enumerate}
+
+\textbf{解 (4) 展望符与 LR(1) 分析表}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{c c c}
+\toprule
+\textbf{项目} & \textbf{状态} & \textbf{展望符} \\
+\midrule
+$R \to L\cdot$ & \textbf{I2} & $\{\#\}$（不含 =） \\
+$S \to R\cdot$ / $S \to L=R\cdot$ & I3 / I9 & $\{\#\}$ \\
+$L \to i\cdot$ / $L \to *R\cdot$ / $R \to L\cdot$ & I5 / I7 / I8 & $\{=,\#\}$ \\
+$R \to L\cdot$ / $L \to i\cdot$ / $L \to *R\cdot$ & I10 / I12 / I13 & $\{\#\}$ \\
+$S' \to S\cdot$ & I1 & $\{\#\}$（acc） \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+分析表：
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{c|ccccccc}
+\toprule
+状态 & $i$ & $*$ & $=$ & $\#$ & $S$ & $L$ & $R$ \\
+\midrule
+0 & s5 & s4 &  &  & 1 & 2 & 3 \\
+1 &  &  &  & acc &  &  &  \\
+2 &  &  & s6 & r5 &  &  &  \\
+3 &  &  &  & r2 &  &  &  \\
+4 & s5 & s4 &  &  &  & 8 & 7 \\
+5 &  &  & r4 & r4 &  &  &  \\
+6 & s12 & s11 &  &  &  & 10 & 9 \\
+7 &  &  & r3 & r3 &  &  &  \\
+8 &  &  & r5 & r5 &  &  &  \\
+9 &  &  &  & r1 &  &  &  \\
+10 &  &  &  & r5 &  &  &  \\
+11 & s12 & s11 &  &  &  & 10 & 13 \\
+12 &  &  &  & r4 &  &  &  \\
+13 &  &  &  & r3 &  &  &  \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+（第 2 行 = 列是 s6 不是 r5；第 8 行同一产生式 $R \to L\cdot$ 展望符却是 $\{=,\#\}$——LR(1) 表精度所在。）
+
+\textbf{解 (5) 句子 i=i 的分析过程}（归约的 GOTO 单独一行）：
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{c c c c p{5.8cm}}
+\toprule
+\textbf{步骤} & \textbf{状态栈} & \textbf{符号栈} & \textbf{输入} & \textbf{动作} \\
+\midrule
+1 & 0 & \# & i=i\# & s5：移进 i \\
+2 & 0 5 & \#i & =i\# & r4：L→i（展望符 = \ok），弹 1 态 \\
+3 & 0 & \# & =i\# & GOTO(0,L)=2 \\
+4 & 0 2 & \#L & =i\# & s6：移进 =（不归约 R→L！） \\
+5 & 0 2 6 & \#L= & i\# & s12：移进 i \\
+6 & 0 2 6 12 & \#L=i & \# & r4：L→i，弹 1 态 \\
+7 & 0 2 6 & \#L= & \# & GOTO(6,L)=10 \\
+8 & 0 2 6 10 & \#L=L & \# & r5：R→L，弹 1 态 \\
+9 & 0 2 6 & \#L= & \# & GOTO(6,R)=9 \\
+10 & 0 2 6 9 & \#L=R & \# & r1：S→L=R，弹 3 态 \\
+11 & 0 & \# & \# & GOTO(0,S)=1 \\
+12 & 0 1 & \#S & \# & acc \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{warnbox}[易错]
+\begin{enumerate}
+\item FOLLOW(R) 与 FOLLOW(L) 尾部互传，须算到不动点 $\{=,\#\}$。
+\item I2 的 $R \to L\cdot$ 展望符只是 \#（来自 $S \to \cdot R$ 链），别把 = 加进去。
+\item 成对状态别合并；I4、I11 自环别漏画。
+\end{enumerate}
+\end{warnbox}
+
+\subsection*{第 9 题}
+
+\begin{qbox}
+{\large\bfseries 第 9 题（进阶2·四终结符·DFA 带环）}\quad $G[S]$：$S \to L{=}R \mid L{<}R \mid R$，$L \to {*}R \mid i$，$R \to L$（终结符 $=,<,*,i$ 四个，不含 \#）。\\
+(1) 增广文法并编号；(2) LR(1) 项目集规范族（含展望符）与 DFA（指出环）；(3) 判定 LR(0)/SLR(1)/LR(1)；(4) 展望符与 LR(1) 分析表；(5) 句子 \textbf{*{*}i<i} 的分析过程。
+\end{qbox}
+
+\textbf{解 (1) 增广文法}：
+\[
+\begin{aligned}
+& 0.\ S' \to S \qquad 1.\ S \to L = R \qquad 2.\ S \to L < R \qquad 3.\ S \to R\\
+& 4.\ L \to * R \qquad 5.\ L \to i \qquad 6.\ R \to L
+\end{aligned}
+\]
+
+\textbf{解 (2) 项目集与 DFA}
+
+\textbf{展望符合并展开（``=/</\#'' 怎么来的，三条链）}：
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{c c c c}
+\toprule
+\textbf{谁把 L 的产生式加进来（种子）} & \textbf{该处 L 后跟的串} & \textbf{FIRST} & \textbf{并入展望符} \\
+\midrule
+$S \to \cdot L=R,\ \#$ & $=R\#$ & $\{=\}$ & $=$ \\
+$S \to \cdot L<R,\ \#$ & $<R\#$ & $\{<\}$ & $<$ \\
+$R \to \cdot L,\ \#$（来自 $S \to \cdot R,\ \#$） & $\#$ & $\{\#\}$ & $\#$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{enumerate}
+\item 同状态同产生式只写一次、展望符取并 \imp{} $L \to \cdot *R,\ =/</\#$、$L \to \cdot i,\ =/</\#$。
+\item 各状态各算：I6/I7/I12 种子只有 \# \imp{} 全部只有 \#；I4 种子（I0 带来）是 =/</\# \imp{} 全部 =/</\#；I5 同 I4。
+\item 成对状态 I5/I13、I8/I15、I9/I11 核心相同展望符不同（$\{=,<,\#\}$ vs $\{\#\}$），是 6 个状态不是 3 个。
+\end{enumerate}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{c p{11.8cm}}
+\toprule
+\textbf{项目集} & \textbf{内容（=/</\# 即 $\{=,<,\#\}$）} \\
+\midrule
+I0 & $S' \to \cdot S,\ \#$；$S \to \cdot L=R,\ \#$；$S \to \cdot L<R,\ \#$；$S \to \cdot R,\ \#$；$R \to \cdot L,\ \#$；$L \to \cdot *R,\ =/</\#$；$L \to \cdot i,\ =/</\#$ \\
+I1 & $S' \to S\cdot,\ \#$（接受） \\
+I2 & {\boldmath $S \to L\cdot =R,\ \#$}；{\boldmath $S \to L\cdot <R,\ \#$}；{\boldmath $R \to L\cdot,\ \#$} \\
+I3 & $S \to R\cdot,\ \#$ \\
+I4 & $L \to *\cdot R,\ =/</\#$；$R \to \cdot L,\ =/</\#$；$L \to \cdot *R,\ =/</\#$；$L \to \cdot i,\ =/</\#$ \\
+I5 & $L \to i\cdot,\ =/</\#$ \\
+I6 & $S \to L=\cdot R,\ \#$；$R \to \cdot L,\ \#$；$L \to \cdot *R,\ \#$；$L \to \cdot i,\ \#$ \\
+I7 & $S \to L<\cdot R,\ \#$；$R \to \cdot L,\ \#$；$L \to \cdot *R,\ \#$；$L \to \cdot i,\ \#$ \\
+I8 & $L \to *R\cdot,\ =/</\#$ \\
+I9 & $R \to L\cdot,\ =/</\#$ \\
+I10 & $S \to L=R\cdot,\ \#$ \\
+I11 & $R \to L\cdot,\ \#$ \\
+I12 & $L \to *\cdot R,\ \#$；$R \to \cdot L,\ \#$；$L \to \cdot *R,\ \#$；$L \to \cdot i,\ \#$ \\
+I13 & $L \to i\cdot,\ \#$ \\
+I14 & $S \to L<R\cdot,\ \#$ \\
+I15 & $L \to *R\cdot,\ \#$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+DFA（GOTO）：I0 $\xrightarrow{S}$ I1，$\xrightarrow{L}$ I2，$\xrightarrow{R}$ I3，$\xrightarrow{*}$ I4，$\xrightarrow{i}$ I5；I2 $\xrightarrow{=}$ I6，$\xrightarrow{<}$ I7；I4 $\xrightarrow{R}$ I8，$\xrightarrow{L}$ I9，$\xrightarrow{*}$ \textbf{I4（自环）}，$\xrightarrow{i}$ I5；I6 $\xrightarrow{R}$ I10，$\xrightarrow{L}$ I11，$\xrightarrow{*}$ I12，$\xrightarrow{i}$ I13；I7 $\xrightarrow{R}$ I14，$\xrightarrow{L}$ I11，$\xrightarrow{*}$ I12，$\xrightarrow{i}$ I13；I12 $\xrightarrow{R}$ I15，$\xrightarrow{L}$ I11，$\xrightarrow{*}$ \textbf{I12（自环）}，$\xrightarrow{i}$ I13。
+
+\textbf{解 (3) 判定}：
+\begin{enumerate}
+\item \textbf{LR(0)}：I2 内 $R \to L\cdot$（归约）与 $S \to L\cdot = R$、$S \to L\cdot < R$（移进 =、<）并存 \imp{} 移进-归约冲突 \imp{} \textbf{不是 LR(0)}。
+\item \textbf{SLR(1)}：求 \textbf{FOLLOW(R)}：R 后可跟 =（经 R→L、S→L=R）、<（同理 S→L<R）、\#（S→R 句尾），尾部互传 $\Rightarrow FOLLOW(R)=FOLLOW(L)=\{=,<,\#\}$。与移进终结符求交：I2 处 $FOLLOW(R) \cap \{=\} = \{=\} \neq \emptyset$，$FOLLOW(R) \cap \{<\} = \{<\} \neq \emptyset$（两列都交上）\imp{} \textbf{不是 SLR(1)}。
+\item \textbf{LR(1)}：展望符求交：I2 处 $\{\#\} \cap \{=,\ <\} = \emptyset$ \imp{} 无冲突，其余各集无冲突 \imp{} \textbf{是 LR(1)}。
+\end{enumerate}
+
+\textbf{解 (4) 展望符与 LR(1) 分析表}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{c c c}
+\toprule
+\textbf{项目} & \textbf{状态} & \textbf{展望符} \\
+\midrule
+$R \to L\cdot$ & \textbf{I2} & $\{\#\}$（不含 =、<） \\
+$S \to R\cdot$ / $S \to L=R\cdot$ / $S \to L<R\cdot$ & I3 / I10 / I14 & $\{\#\}$ \\
+$L \to i\cdot$ / $L \to *R\cdot$ / $R \to L\cdot$ & I5 / I8 / I9 & $\{=,<,\#\}$ \\
+$R \to L\cdot$ / $L \to i\cdot$ / $L \to *R\cdot$ & I11 / I13 / I15 & $\{\#\}$ \\
+$S' \to S\cdot$ & I1 & $\{\#\}$（acc） \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+分析表：
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{c|cccccccc}
+\toprule
+状态 & $i$ & $*$ & $=$ & $<$ & $\#$ & $S$ & $L$ & $R$ \\
+\midrule
+0 & s5 & s4 &  &  &  & 1 & 2 & 3 \\
+1 &  &  &  &  & acc &  &  &  \\
+2 &  &  & s6 & s7 & r6 &  &  &  \\
+3 &  &  &  &  & r3 &  &  &  \\
+4 & s5 & s4 &  &  &  &  & 9 & 8 \\
+5 &  &  & r5 & r5 & r5 &  &  &  \\
+6 & s13 & s12 &  &  &  &  & 11 & 10 \\
+7 & s13 & s12 &  &  &  &  & 11 & 14 \\
+8 &  &  & r4 & r4 & r4 &  &  &  \\
+9 &  &  & r6 & r6 & r6 &  &  &  \\
+10 &  &  &  &  & r1 &  &  &  \\
+11 &  &  &  &  & r6 &  &  &  \\
+12 & s13 & s12 &  &  &  &  & 11 & 15 \\
+13 &  &  &  &  & r5 &  &  &  \\
+14 &  &  &  &  & r2 &  &  &  \\
+15 &  &  &  &  & r4 &  &  &  \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+（第 2 行：= 列 s6、< 列 s7、\# 列才 r6。）
+
+\textbf{解 (5) 句子 {*}{*}i<i 的分析过程}（归约的 GOTO 单独一行）：
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{c c c c p{5.8cm}}
+\toprule
+\textbf{步骤} & \textbf{状态栈} & \textbf{符号栈} & \textbf{输入} & \textbf{动作} \\
+\midrule
+1 & 0 & \# & {*}{*}i<i\# & s4：移进 {*} \\
+2 & 0 4 & \#{*} & {*}i<i\# & s4：移进 {*}（I4 自环） \\
+3 & 0 4 4 & \#{*}{*} & i<i\# & s5：移进 i \\
+4 & 0 4 4 5 & \#{*}{*}i & <i\# & r5：L→i（展望符 < \ok），弹 1 态 \\
+5 & 0 4 4 & \#{*}{*} & <i\# & GOTO(4,L)=9 \\
+6 & 0 4 4 9 & \#{*}{*}L & <i\# & r6：R→L，弹 1 态 \\
+7 & 0 4 4 & \#{*}{*} & <i\# & GOTO(4,R)=8 \\
+8 & 0 4 4 8 & \#{*}{*}R & <i\# & r4：L→{*}R，弹 2 态 \\
+9 & 0 4 & \#{*} & <i\# & GOTO(4,L)=9 \\
+10 & 0 4 9 & \#{*}L & <i\# & r6：R→L，弹 1 态 \\
+11 & 0 4 & \#{*} & <i\# & GOTO(4,R)=8 \\
+12 & 0 4 8 & \#{*}R & <i\# & r4：L→{*}R，弹 2 态 \\
+13 & 0 & \# & <i\# & GOTO(0,L)=2 \\
+14 & 0 2 & \#L & <i\# & s7：移进 <（不归约 R→L！） \\
+15 & 0 2 7 & \#L< & i\# & s13：移进 i \\
+16 & 0 2 7 13 & \#L<i & \# & r5：L→i，弹 1 态 \\
+17 & 0 2 7 & \#L< & \# & GOTO(7,L)=11 \\
+18 & 0 2 7 11 & \#L<L & \# & r6：R→L，弹 1 态 \\
+19 & 0 2 7 & \#L< & \# & GOTO(7,R)=14 \\
+20 & 0 2 7 14 & \#L<R & \# & r2：S→L<R，弹 3 态 \\
+21 & 0 & \# & \# & GOTO(0,S)=1 \\
+22 & 0 1 & \#S & \# & acc \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+（第 4--13 行演示 {*} 自环的嵌套归约：L→i $\to$ R→L $\to$ L→{*}R 一圈圈往上包。）
+
+\begin{warnbox}[易错]
+\begin{enumerate}
+\item FOLLOW(R) 须算全 $\{=,<,\#\}$（=、< 两条尾部传染都要写）。
+\item I2 是``一归约对两移进''，SLR 在 =、< \textbf{两列}都冲突，别只报一列。
+\item I5/I13、I8/I15、I9/I11 成对状态别合并；I4、I12 自环别漏画。
+\end{enumerate}
+\end{warnbox}
+
+\section{逆波兰式（第 10--12 题）}
+
+\begin{qbox}
+{\large\bfseries 第 10 题}\quad 写出布尔表达式 \texttt{not a and b} $\le$ \texttt{c or d} 的逆波兰式。
+\end{qbox}
+
+\textbf{答案}：$a\ \text{not}\ b\ c\ {\le}\ \text{and}\ d\ \text{or}$
+
+\textbf{解析}：
+\begin{enumerate}
+\item 优先级 not $>$ $\le$ $>$ and $>$ or \imp{} 树 $((\neg a) \wedge (b \le c)) \vee d$。
+\item 后序：\texttt{a not}、\texttt{b c $\le$}、and、d、or \imp{} \texttt{a not b c <= and d or}。
+\end{enumerate}
+
+\begin{qbox}
+{\large\bfseries 第 11 题}\quad 写出算术表达式 \texttt{a*(b-c)-d/e} 的逆波兰式。
+\end{qbox}
+
+\textbf{答案}：$a\ b\ c\ {-}\ {*}\ d\ e\ /\ {-}$
+
+\textbf{解析}：
+\begin{enumerate}
+\item 括号先算 $b-c$ \imp{} \texttt{b c -}；$*$ 与 $/$ 各自先于 $-$ \imp{} \texttt{a b c - *}、\texttt{d e /}。
+\item 最后的 $-$ \textbf{左结合} \imp{} \texttt{a b c - * d e / -}；误写 \texttt{a b c - * d e - /} 值就变了。
+\end{enumerate}
+
+\begin{qbox}
+{\large\bfseries 第 12 题}\quad 写出赋值表达式 \texttt{x = y = a + b*2} 的逆波兰式。
+\end{qbox}
+
+\textbf{答案}：$x\ y\ a\ b\ 2\ {*}\ {+}\ =\ =$
+
+\textbf{解析}：
+\begin{enumerate}
+\item 优先级 $*$ $>$ $+$ $>$ =（赋值最低）\imp{} 先 \texttt{a b 2 * +}。
+\item = \textbf{右结合}：$x=(y=(a+b*2))$ \imp{} \texttt{y a b 2 * + =} 外面再套 x \imp{} \texttt{x y a b 2 * + = =}；左结合写法 \texttt{x y = …} 无意义。
+\end{enumerate}
+
+\section{四元式（第 13--15 题）}
+
+\textbf{本卷风格}：（1） 条件跳转用\textbf{取反条件}跳假出口/出口，真出口靠顺序落下；（2） 表达式结果\textbf{直接写目标变量}，无临时变量、无独立 := 式；（3） jz = 为假（零）跳，jnz = 为真（非零）跳。（若考试要求 $( := , T, -, x )$ 两条式，把结果行拆成``算入 T + 赋给目标''即可。）
+
+\textbf{运算符优先级关系表}（定表达式树用）：
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{c c c}
+\toprule
+\textbf{级（高$\to$低）} & \textbf{运算符} & \textbf{结合性} \\
+\midrule
+1 & ( ) & — \\
+2 & 一元 not、一元负号 $-$ & 右结合 \\
+3 & $*$ / & 左结合 \\
+4 & 二元 $+$ $-$ & 左结合 \\
+5 & 关系 $<\ \le\ >\ \ge\ =\ \ne$ & 左结合 \\
+6 & and & 左结合 \\
+7 & or & 左结合 \\
+8 & 赋值（:= / =） & 右结合 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{qbox}
+{\large\bfseries 第 13 题}\quad 把布尔表达式 \texttt{a>b or c and not d} 翻译成四元式序列（跳转法，假定起始标号 10）。
+\end{qbox}
+
+\textbf{答案}（13 = E.true，14 = E.false）：
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{c c p{8.2cm}}
+\toprule
+\textbf{标号} & \textbf{四元式} & \textbf{说明} \\
+\midrule
+10 & (j>, a, b, 13) & a$>$b 为真 $\to$ 13（整体真）；为假则顺序执行 \\
+11 & (jz, c, -, 14) & c 为假 $\Rightarrow$ and 为假 $\to$ 14（整体假）；c 真则继续 \\
+12 & (jnz, d, -, 14) & d 为真 $\Rightarrow$ not d 假 $\Rightarrow$ 整体假 $\to$ 14；d 假则落到 13 \\
+13 & ... & E.true \\
+14 & ... & E.false \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{解析}：
+\begin{enumerate}
+\item 按优先级（not $>$ 关系 $>$ and $>$ or）：原式 $=(a>b) \vee (c \wedge \neg d)$。
+\item or：a$>$b 为真直跳 13；为假走右部 $c \wedge \neg d$。
+\item and：c 为假 $\Rightarrow$ 整体假（11$\to$14）；c 为真再判 $\neg d$。
+\item not：d 真 $\Rightarrow$ 整体假（12$\to$14）；d 假 $\Rightarrow$ 整体真，\textbf{顺序落 13}。
+\end{enumerate}
+
+\begin{qbox}
+{\large\bfseries 第 14 题}\quad 把语句 \texttt{if x>0 then y:=x+1 else y:=x-1} 翻译成四元式序列（假定起始标号 10）。
+\end{qbox}
+
+\textbf{答案}（14 = 出口）：
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{c c p{8.2cm}}
+\toprule
+\textbf{标号} & \textbf{四元式} & \textbf{说明} \\
+\midrule
+10 & (j<=, x, 0, 13) & x$\le$0（条件取反）$\to$ 13（else 段）；x$>$0 则顺序进 then \\
+11 & (+, x, 1, y) & then：y := x+1（结果直接写 y） \\
+12 & (j, -, -, 14) & then 做完 $\to$ 14，\textbf{跳过 else} \\
+13 & (-, x, 1, y) & else：y := x-1 \\
+14 & ... & 出口 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{解析}：
+\begin{enumerate}
+\item 条件取反跳：x$>$0 的假分支是 x$\le$0 $\Rightarrow$ 10 直接跳 else（13）；真分支顺序落下进 then。
+\item (+,x,1,y)、(-,x,1,y) 一条式即一条赋值，无临时变量。
+\item \textbf{12 别漏}：then 尾不跳就会跌进 else，y 被再赋一次。
+\end{enumerate}
+
+\begin{qbox}
+{\large\bfseries 第 15 题}\quad 把语句 \texttt{while a<b do a:=a+b} 翻译成四元式序列（假定起始标号 10）。
+\end{qbox}
+
+\textbf{答案}（13 = 循环出口）：
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{c c p{8.2cm}}
+\toprule
+\textbf{标号} & \textbf{四元式} & \textbf{说明} \\
+\midrule
+10 & (j>=, a, b, 13) & a$\ge$b（条件取反）$\to$ 13（出口）；a$<$b 则顺序进循环体 \\
+11 & (+, a, b, a) & 循环体：a := a+b \\
+12 & (j, -, -, 10) & \textbf{回跳判断}（最易漏！指回 10 不是 11） \\
+13 & ... & 循环出口 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{解析}：
+\begin{enumerate}
+\item 条件取反跳出口：a$<$b 的假分支是 a$\ge$b $\Rightarrow$ 10 跳 13；真分支顺序落 11 进体。
+\item (+,a,b,a) 即 a:=a+b。
+\item \textbf{回跳 12 必留}且必须指回\textbf{判断那条}（10）。
+\end{enumerate}
+
+\begin{warnbox}[四元式易错]
+\begin{enumerate}
+\item 取反条件方向别弄反：跳的若是假出口，条件就写取反（j<=、j>=、jz）。
+\item while 必须回跳 10；if-else 的 then 尾必须跳出口。
+\item 标号从 10 起连续编；jz = 零跳、jnz = 非零跳。
+\end{enumerate}
+\end{warnbox}
+
+\section{答案速查}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\setlength{\tabcolsep}{6pt}
+\begin{tabular}{@{}c p{13.6cm}@{}}
+\toprule
+\textbf{题号} & \textbf{答案要点} \\
+\midrule
+1 & $L=\{a^i b^j c \mid i,j \ge 0\}=a^* b^* c$（多写法见题）；\textbf{3 型}、正规 \\
+2 & $L=\{a^n b^{n+1} \mid n \ge 0\}$（多写法见题）；\textbf{2 型}、非正规 \\
+3 & $L=(ab \mid ba)^*$（多写法见题）；\textbf{2 型（非 3 型）}、正规 \\
+4 & $S \to aSb \mid T$，$T \to Tb \mid \varepsilon$（另解 $T \to bT \mid \varepsilon$）；\textbf{2 型}、非正规 \\
+5 & $S \to aSa \mid bSb \mid \varepsilon$（另解 $S \to aA \mid bB \mid \varepsilon$，$A \to Sa \mid a$，$B \to Sb \mid b$）；\textbf{2 型}、非正规 \\
+6 & $S \to 0S \mid 1A \mid \varepsilon$，$A \to 0S \mid \varepsilon$（另解 $S \to 0S \mid 10S \mid 1 \mid \varepsilon$）；\textbf{3 型}、正规 \\
+7 & （1） I4/I7 移进-归约冲突 $\Rightarrow$ 非 LR(0)；（2） $FOLLOW(A)=\{a,c\} \cap \{c\},\{a\} \neq \emptyset$ $\Rightarrow$ 非 SLR(1)；（3） $\{a\} \cap \{c\}$、$\{c\} \cap \{a\} = \emptyset$ $\Rightarrow$ \textbf{是 LR(1)}；da $\Rightarrow$ s4, r5, s5, r1, acc \\
+8 & （1） I2 冲突 $\Rightarrow$ 非 LR(0)；（2） $FOLLOW(R)=\{=,\#\} \cap \{=\} \neq \emptyset$ $\Rightarrow$ 非 SLR(1)；（3） $\{\#\} \cap \{=\} = \emptyset$ $\Rightarrow$ \textbf{是 LR(1)}（14 态，I4/I11 自环）；i=i $\Rightarrow$ s5, r4, s6, s12, r4, r5, r1, acc \\
+9 & （1） I2 冲突 $\Rightarrow$ 非 LR(0)；（2） $FOLLOW(R)=\{=,<,\#\} \cap \{=\},\{<\} \neq \emptyset$ $\Rightarrow$ 非 SLR(1)；（3） $\{\#\} \cap \{=,<\} = \emptyset$ $\Rightarrow$ \textbf{是 LR(1)}（16 态，I4/I12 自环）；{*}{*}i<i $\Rightarrow$ s4, s4, s5, r5, r6, r4, r6, r4, s7, s13, r5, r6, r2, acc \\
+10 & \texttt{a not b c <= and d or} \\
+11 & \texttt{a b c - * d e / -} \\
+12 & \texttt{x y a b 2 * + = =}（= 右结合） \\
+13 & 10:(j>,a,b,13) 11:(jz,c,-,14) 12:(jnz,d,-,14)；13=E.true，14=E.false \\
+14 & 10:(j<=,x,0,13) 11:(+,x,1,y) 12:(j,-,-,14) 13:(-,x,1,y) 14=出口 \\
+15 & 10:(j>=,a,b,13) 11:(+,a,b,a) 12:(j,-,-,10) \textbf{回跳} 13=出口 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\end{document}

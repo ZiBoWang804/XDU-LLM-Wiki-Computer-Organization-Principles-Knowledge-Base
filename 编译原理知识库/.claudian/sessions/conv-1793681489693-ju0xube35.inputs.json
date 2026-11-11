@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "conversationId": "conv-1793681489693-ju0xube35",
+  "records": [
+    {
+      "schemaVersion": 1,
+      "id": "msg-1793681489821-fml9mb5",
+      "userTurnOrdinal": 1,
+      "state": "accepted",
+      "localMessageId": "msg-1793681489691-7egi2tw",
+      "timestamp": 1793681489691,
+      "rawDisplayText": "出一道FIRSTVT/LASTVT 与算符优先分析，然后出三道语言 → 文法，并判断文法类型，三道 文法 → 语言，并判断文法/语言类型，以及一道推导与语法树：短语、直接短语、句柄，三道消除左递归（一道直接左递归，两道间接左递归），给出题目和具体解答",
+      "canonicalText": "出一道FIRSTVT/LASTVT 与算符优先分析，然后出三道语言 → 文法，并判断文法类型，三道 文法 → 语言，并判断文法/语言类型，以及一道推导与语法树：短语、直接短语、句柄，三道消除左递归（一道直接左递归，两道间接左递归），给出题目和具体解答",
+      "context": {
+        "editorSelection": {
+          "notePath": "期末复习专题.md",
+          "mode": "selection",
+          "selectedText": "消除左递归",
+          "lineCount": 1,
+          "startLine": 660
+        },
+        "linkedContent": {
+          "path": "期末复习专题.md"
+        }
+      },
+      "images": [],
+      "contentDigest": "a0cdec350f4590158a0c65038359edbfb8fb60456c27e55c64acf252f219d4e8",
+      "providerUserMessageId": "e6228e7a-4b53-46ae-ae4c-c489698649d3",
+      "providerAssistantMessageId": "23084e4c-c2f4-48a5-b779-2073eb3466e1"
+    },
+    {
+      "schemaVersion": 1,
+      "id": "msg-1793704995866-q8cgudd",
+      "userTurnOrdinal": 2,
+      "state": "accepted",
+      "localMessageId": "msg-1793704995861-h26j2ja",
+      "timestamp": 1793704995861,
+      "rawDisplayText": "把素短语和最短素短语也加到第四部分 题型4：推导与语法树——短语、直接短语、句柄（第 8 题）",
+      "canonicalText": "把素短语和最短素短语也加到第四部分 题型4：推导与语法树——短语、直接短语、句柄（第 8 题）",
+      "context": {
+        "editorSelection": {
+          "notePath": "期末复习-模拟卷.md",
+          "mode": "selection",
+          "selectedText": "第四部分 题型4：推导与语法树——短语、直接短语、句柄（第 8 题）",
+          "lineCount": 1,
+          "startLine": 147
+        }
+      },
+      "images": [],
+      "contentDigest": "6c44beea19d71b8ba0189aa5a85a84671a004b1eb8cb0398c58f3f9938a85245",
+      "providerUserMessageId": "9449853b-6089-4750-b4f4-228a04b2cab6",
+      "providerAssistantMessageId": "9ae66a29-7449-43cb-bdec-7c5e07d58e24"
+    },
+    {
+      "schemaVersion": 1,
+      "id": "msg-1793786707120-pl2alb5",
+      "userTurnOrdinal": 3,
+      "state": "accepted",
+      "localMessageId": "msg-1793786707102-7wlla0s",
+      "timestamp": 1793786707102,
+      "rawDisplayText": "今天再出四道文法转语言、4道语言转文法的题目，可以参考第二章ppt练习题，然后再出一道LL（1）文法题，给出题目和具体解答，",
+      "canonicalText": "今天再出四道文法转语言、4道语言转文法的题目，可以参考第二章ppt练习题，然后再出一道LL（1）文法题，给出题目和具体解答，",
+      "images": [],
+      "contentDigest": "51984b73fb1fac02f61e27fe726203c773156d4d441db1c6ab137c54c811ef39",
+      "providerUserMessageId": "3328d10a-6bbb-4132-9120-59762100fcb3",
+      "providerAssistantMessageId": "1f820579-cd61-4ce2-ae3b-e61da9c36734"
+    },
+    {
+      "schemaVersion": 1,
+      "id": "msg-1793787154925-osci00w",
+      "userTurnOrdinal": 4,
+      "state": "accepted",
+      "localMessageId": "msg-1793787154921-soaw73j",
+      "timestamp": 1793787154921,
+      "rawDisplayText": "在这里D:\\wzb\\编译原理\\编译原理知识库\\第二章PPT练习-完整题解.md",
+      "canonicalText": "在这里D:\\wzb\\编译原理\\编译原理知识库\\第二章PPT练习-完整题解.md",
+      "images": [],
+      "contentDigest": "d8a781f978e110c7b5b124a70b4765f6619bce3e058954b925fdc988f4f7ef91",
+      "providerUserMessageId": "5b589f78-5996-49ac-be4c-e7343eb7b0d1",
+      "providerAssistantMessageId": "5c19aefd-42fe-4269-83f2-9c25148a08da"
+    },
+    {
+      "schemaVersion": 1,
+      "id": "msg-1793788148923-wdvvfp3",
+      "userTurnOrdinal": 5,
+      "state": "accepted",
+      "localMessageId": "msg-1793788148917-emmtowo",
+      "timestamp": 1793788148917,
+      "rawDisplayText": "我的意思是让你参考第二章PPT练习-完整题解里的题目，单独再出一份复习卷：四道文法转语言、4道语言转文法的题目\n一道LL（1）文法题（求：\n   · FIRST 集\n   · FOLLOW 集\n   · SELECT 集\n        构造 LL(1) 预测分析表，并判断是否为 LL(1) 文法。）要求：不要原题，要给出解析和答案",
+      "canonicalText": "我的意思是让你参考第二章PPT练习-完整题解里的题目，单独再出一份复习卷：四道文法转语言、4道语言转文法的题目\n一道LL（1）文法题（求：\n   · FIRST 集\n   · FOLLOW 集\n   · SELECT 集\n        构造 LL(1) 预测分析表，并判断是否为 LL(1) 文法。）要求：不要原题，要给出解析和答案",
+      "images": [],
+      "contentDigest": "fa0a535b3467b03e5790b504cacfa00b568ae0570c9830c86c9d83054aae6f0e",
+      "providerUserMessageId": "820a79ff-f5fb-4f53-bd12-2f2dcb230afb",
+      "providerAssistantMessageId": "4c6b05c6-d7ee-48b9-a076-314f327582b2"
+    }
+  ]
+}

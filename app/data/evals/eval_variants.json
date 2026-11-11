@@ -1,0 +1,92 @@
+[
+ {
+  "kp": "LL(1)文法",
+  "question": "G[E]: E→TE',E'→+TE'|ε,T→FT',T'→*FT'|ε,F→(E)|i。求 FIRST/FOLLOW/SELECT 并判 LL(1)",
+  "answer": "FIRST(F)=FIRST(T)=FIRST(E)={(,i)}；FOLLOW(E)={#,)}；SELECT 两两交空⇒是 LL(1)",
+  "note": "题型6 全链条"
+ },
+ {
+  "kp": "LL(1)文法",
+  "question": "G[S]: S→aA|b，A→aA|ε。判 LL(1) 并建预测分析表",
+  "answer": "SELECT(S→aA)={a},SELECT(S→b)={b}；SELECT(A→aA)={a},SELECT(A→ε)={a,#}——交集非空⇒不是 LL(1)",
+  "note": "含 ε 的判定陷阱"
+ },
+ {
+  "kp": "FIRST/FOLLOW/SELECT集",
+  "question": "G[A]: A→aB|b，B→b|ε。求全部 FIRST/FOLLOW/SELECT",
+  "answer": "FIRST(A)={a,b},FIRST(B)={b,ε}；FOLLOW(A)={#},FOLLOW(B)={#}；SELECT(A→aB)={a},SELECT(B→ε)={#}",
+  "note": "可空传染基础版"
+ },
+ {
+  "kp": "左递归",
+  "question": "消除直接左递归：A→Aa|Ab|c|d",
+  "answer": "A→cA'|dA'；A'→aA'|bA'|ε",
+  "note": "左递归消除"
+ },
+ {
+  "kp": "左递归",
+  "question": "消除间接左递归：A→Bx|y，B→Ax|z",
+  "answer": "代入：A→Ax x|z x|y ⇒ A→yA'|zxA'；A'→xxA'|ε；B→Ax|z（回代）",
+  "note": "间接左递归"
+ },
+ {
+  "kp": "推导与归约",
+  "question": "G[S]: S→AB，A→a|aA，B→b。给出 aab 的最左推导与最右推导",
+  "answer": "最左：S⇒AB⇒aAB⇒aaAB⇒aab；最右：S⇒AB⇒Ab⇒aAb⇒aab",
+  "note": "推导序列"
+ },
+ {
+  "kp": "短语与句柄",
+  "question": "句型 aab 的短语、直接短语、句柄（G 同上）",
+  "answer": "短语：aab、aa、b（子树叶子）；直接短语：aa、b；句柄：aa（最左直接短语）",
+  "note": "句柄辨认"
+ },
+ {
+  "kp": "Chomsky分类",
+  "question": "G[S]: S→Sa|Sb|c。求 L(G) 并判类型",
+  "answer": "L(G)={c{a,b}*}；产生式右部含两个符号但左部单 NT 且无长度限制⇒2 型；语言是正规语言⇒3 型语言",
+  "note": "文法→语言+判类"
+ },
+ {
+  "kp": "FIRSTVT/LASTVT",
+  "question": "E→E+T|T，T→T*F|F，F→(E)|i。求 FIRSTVT(E)/FIRSTVT(T)",
+  "answer": "FIRSTVT(E)=FIRSTVT(T)=FIRSTVT(F)={(,i,+,*}？精确：FIRSTVT(E)={+,(,i}；FIRSTVT(T)={*,(,i}；FIRSTVT(F)={(,i}",
+  "note": "算符优先集合"
+ },
+ {
+  "kp": "最左素短语",
+  "question": "算符优先分析中素短语和句柄的区别？",
+  "answer": "素短语：含终结符且不含更小素短语的短语；最左素短语是算符优先归约对象。句柄是最左直接短语，是 LR 归约对象。",
+  "note": "概念辨析"
+ },
+ {
+  "kp": "SLR(1)分析表",
+  "question": "G[S]: S→L=R|R，L→*R|i，R→L。构造 LR(0) 项目集并说明冲突解决",
+  "answer": "拓广 S'→S；I0={S'→·S,S→·L=R,S→·R,L→·*R,L→·i,R→·L}……移进-归约冲突用 FOLLOW 展望解决⇒SLR(1)",
+  "note": "LR(0)/SLR 全链条"
+ },
+ {
+  "kp": "四元式",
+  "question": "写出 x:=a-b*c 的四元式序列",
+  "answer": "(*,b,c,T1) (-,a,T1,T2) (:=,T2,_,x)",
+  "note": "表达式四元式"
+ },
+ {
+  "kp": "逆波兰式",
+  "question": "把布尔表达式 a<b or c>d 转逆波兰式（按短路语义）",
+  "answer": "ab<c> d or（注：比较符先做）标准：ab<cd> or",
+  "note": "布尔式后缀化"
+ },
+ {
+  "kp": "语法树与二义性",
+  "question": "证明 G[E]: E→E+E|E*E|i 是二义文法",
+  "answer": "句型 i+i*i 有两棵语法树：(E+E)*E 与 E+(E*E) 结构不同⇒二义",
+  "note": "二义性证明"
+ },
+ {
+  "kp": "参数传递",
+  "question": "swap(x,y) 传值与传地址两种方式下，调用 swap(a,b) 对实参的影响？",
+  "answer": "传值：实参不变（交换的是副本）；传地址：实参 a,b 被交换",
+  "note": "参数传递辨析"
+ }
+]
