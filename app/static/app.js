@@ -713,7 +713,15 @@ async function runSkill(name, params = {}) {
 let quizList = [], quizIdx = 0, quizRight = 0;
 
 async function startQuiz() {
-  quizList = await api('/api/quiz/questions?limit=10');
+  const area = document.getElementById('quizArea');
+  if (area) area.innerHTML = '<p class="muted">🧠 TeleAgent 正在结合你的学情命制全新题目…（约 20-60 秒）</p>';
+  try {
+    quizList = await api('/api/quiz/questions?limit=10&student_id=' + SID);
+  } catch (e) {
+    if (area) area.innerHTML = `<p style="color:var(--bad)">❌ 自测题生成失败：${e.message}</p>
+      <button class="primary" onclick="startQuiz()">重试</button>`;
+    return;
+  }
   quizIdx = 0; quizRight = 0;
   renderQuiz();
 }
@@ -796,8 +804,15 @@ document.getElementById('examDate').value =
 
 async function genPlan() {
   const exam_date = document.getElementById('examDate').value;
-  const r = await post('/api/plan/generate', { student_id: SID, exam_date });
-  genPlanTo(document.getElementById('planArea'), r);
+  const el = document.getElementById('planArea');
+  el.innerHTML = '<p class="muted">🧠 TeleAgent 正在结合学情与能力轨迹规划复习路径…（约 20-60 秒）</p>';
+  try {
+    const r = await post('/api/plan/generate', { student_id: SID, exam_date });
+    genPlanTo(el, r);
+  } catch (e) {
+    el.innerHTML = `<p style="color:var(--bad)">❌ 复习计划生成失败：${e.message}</p>
+      <button class="primary" onclick="genPlan()">重试</button>`;
+  }
 }
 
 // 教师布置的作业（计划页展示）

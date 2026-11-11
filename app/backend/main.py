@@ -250,10 +250,7 @@ def ask(req: AskReq):
     try:
         answer = llm_adapter.chat(system, user, temperature=req.temperature)
     except Exception as exc:
-        # 无 LLM 时降级：直接回 wiki 摘录
-        answer = ('（离线模式，未接通大模型）以下为知识库相关摘录：\n' +
-                  '\n---\n'.join(h['excerpt'] for h in hits[:2]) or '知识库未命中')
-        return {'answer': answer, 'sources': hits, 'llm_error': str(exc)}
+        raise HTTPException(502, '问答生成失败：%s' % str(exc)[:150])
     return {'answer': answer, 'sources': hits}
 
 
@@ -266,16 +263,18 @@ _questions_path_old = ''
 
 
 @app.get('/api/quiz/questions')
-def quiz_questions(kp: str = '', limit: int = 10):
-    """自测题（随机抽 limit 道，可按 kp 过滤）。不含答案泄露字段。"""
-    with open(QUESTIONS_PATH(), encoding='utf-8') as f:
-        qs = json.load(f)['questions']
-    if kp:
-        qs = [q for q in qs if kp in q['kp'] or q['kp'] in kp]
-    import random
-    picked = random.sample(qs, min(limit, len(qs)))
-    return [{'id': q['id'], 'type': q['type'], 'kp': q['kp'], 'qtype': q['qtype'],
-             'q': q['q'], 'options': q['options']} for q in picked]
+def quiz_questions(kp: str = '', limit: int = 10, student_id: int = 0):
+    """自测题（LLM 结合学情/能力轨迹全新生成，与题库去重后入库）。不含答案泄露字段。"""
+    try:
+        qs = services.llm_quiz(kp, limit, student_id)
+    except llm_adapter.LLMError as e:
+        raise HTTPException(502, '自测题生成失败：%s' % e)
+    out = []
+    for q in qs:
+        qid = teacher_tools.add_question(dict(q))
+        out.append({'id': qid, 'type': q['type'], 'kp': q['kp'], 'qtype': q['qtype'],
+                    'q': q['q'], 'options': q['options']})
+    return out
 
 
 @app.get('/api/quiz/answer')
@@ -300,13 +299,16 @@ class AnswerReq(BaseModel):
 
 @app.post('/api/quiz/submit')
 def quiz_submit(req: AnswerReq):
-    cause = ''
+    cause, cause_msg = '', ''
     if not req.correct and req.question_text:
-        cause = services.classify_error(req.question_text, req.right_answer, req.student_answer)
+        try:
+            cause = services.classify_error(req.question_text, req.right_answer, req.student_answer)
+        except Exception as e:
+            cause_msg = '错因归类失败：%s' % str(e)[:80]
         db.add_wrong_question(req.student_id, req.question_id, req.kp, req.question_text,
                               req.student_answer, req.right_answer, cause)
     db.record_answer(req.student_id, req.question_id, req.kp, req.qtype, req.correct, cause)
-    return {'ok': True, 'error_cause': cause}
+    return {'ok': True, 'error_cause': cause or cause_msg}
 
 
 @app.get('/api/quiz/weakness')
@@ -317,17 +319,16 @@ def quiz_weakness(student_id: int):
 class PlanReq(BaseModel):
     student_id: int
     exam_date: str  # YYYY-MM-DD
+    req: str = ''   # 额外要求
 
 
 @app.post('/api/plan/generate')
 def plan_generate(req: PlanReq):
     t0 = time.time()
-    weaknesses = db.weakness_ranking(req.student_id)
-    with open(config.graph_path(), encoding='utf-8') as f:
-        graph = json.load(f)
-    weights = {n['name']: n.get('weight', 5) for n in graph['nodes']
-               if n['type'] == 'knowledge_point'}
-    plan = services.generate_plan(req.exam_date, weaknesses, weights)
+    try:
+        plan = services.llm_plan(req.exam_date, req.student_id, req.req)
+    except llm_adapter.LLMError as e:
+        raise HTTPException(502, '复习计划生成失败：%s' % e)
     db.save_plan(req.student_id, req.exam_date, plan)
     return {'plan': plan, 'days': len(plan), 'elapsed_s': round(time.time() - t0, 2)}
 
@@ -341,7 +342,10 @@ class VariantReq(BaseModel):
 
 @app.post('/api/variant/generate')
 def variant_generate(req: VariantReq):
-    v = services.variant_for_kp(req.kp)
+    try:
+        v = services.llm_variant(req.kp, req.proto, req.req, req.student_id)
+    except llm_adapter.LLMError as e:
+        raise HTTPException(502, '变式题生成失败：%s' % e)
     if req.student_id:
         db.save_variant(req.student_id, req.kp, v)
     return v
@@ -556,8 +560,11 @@ def api_rewrite(req: RewriteReq, request: Request):
     system = ('你是编译原理知识库的文本改写助手。按用户指令改写给定文字，只输出改写结果本身，'
               '保持术语准确、markdown 格式、数学符号（$..$）不变。严禁引入事实错误或编造页码。')
     instruction = req.instruction.strip() or '润色'
-    new_text = llm_adapter.chat(system, '【原文】\n%s\n\n【改写指令】%s' % (req.text, instruction),
-                                temperature=0.3)
+    try:
+        new_text = llm_adapter.chat(system, '【原文】\n%s\n\n【改写指令】%s' % (req.text, instruction),
+                                    temperature=0.3)
+    except Exception as e:
+        raise HTTPException(502, '改写失败：%s' % str(e)[:150])
     return {'before': req.text, 'after': new_text, 'instruction': instruction}
 
 
@@ -613,7 +620,7 @@ def api_collab(req: CollabReq, request: Request):
                 '任务：%s\n%s' % (task, '\n'.join('【%s】%s' % (d['agent'], d['text'][-300:]) for d in dialogue[-2:]) or '（开始作答）'),
                 temperature=0.4)
         except Exception as e:
-            stu = '（学生智能体暂不可用：%s）' % e
+            raise HTTPException(502, '学生智能体第 %d 轮失败：%s' % (i + 1, str(e)[:120]))
         dialogue.append({'agent': req.student_name, 'role': 'student', 'text': stu})
         # 教师智能体审阅
         try:
@@ -622,7 +629,7 @@ def api_collab(req: CollabReq, request: Request):
                 '任务完成度够了就说"通过"并总结成果；不够就给出具体修改意见。要求：结论明确、意见具体。' % (req.teacher_name, req.student_name),
                 '任务：%s\n【学生成果】\n%s' % (task, stu), temperature=0.3)
         except Exception as e:
-            tea = '（教师智能体暂不可用：%s）' % e
+            raise HTTPException(502, '教师智能体第 %d 轮失败：%s' % (i + 1, str(e)[:120]))
         dialogue.append({'agent': req.teacher_name, 'role': 'teacher', 'text': tea})
         if '通过' in tea[:20] or '完成' in tea[:20]:
             break

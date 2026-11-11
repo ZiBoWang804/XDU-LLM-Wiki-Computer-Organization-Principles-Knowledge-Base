@@ -110,6 +110,16 @@ def add_wrong_question(student_id: int, question_id: str, kp: str, question_text
         return cur.lastrowid
 
 
+def recent_mistakes(student_id: int, limit: int = 5) -> list:
+    """最近错题（能力轨迹：错题趋势注入生成提示词）。"""
+    with get_conn() as conn:
+        rows = conn.execute(
+            'SELECT kp, question_text, student_answer, right_answer, error_cause, created_at'
+            ' FROM wrong_questions WHERE student_id=? ORDER BY created_at DESC LIMIT ?',
+            (student_id, limit)).fetchall()
+    return [dict(r) for r in rows]
+
+
 # ---------- 薄弱点诊断 ----------
 def weakness_ranking(student_id: int) -> list:
     """按知识点统计正确率，输出薄弱排序 + 错因分布。"""

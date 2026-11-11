@@ -5,7 +5,6 @@ import datetime
 import io
 import json
 import os
-import random
 import re
 
 from . import config, db as dbm, services, teacher_tools
@@ -93,7 +92,6 @@ class QuestionSkill(Skill):
         req = params.get('req', '')
         kp = params.get('kp', '').strip()
         count = int(params.get('count', 1))
-        self._last_llm_err = ''
 
         # ===== Agent 第一步：自主检索知识库（发散——用要求原文+关键词搜） =====
         kb_ctx = ''
@@ -135,9 +133,8 @@ class QuestionSkill(Skill):
         except Exception:
             stu_ctx = '（暂无学情数据）'
 
-        # ===== Agent 第三步：思考生成（题干+答案+解析） =====
-        bank = [q for q in _load_questions() if (kp and (kp in q['kp'] or q['kp'] in kp))]
-        used_llm = False
+        # ===== Agent 第三步：思考生成（题干+答案+解析；与题库查重，失败直接报错不降级） =====
+        bank_texts = [str(q.get('q', '')) for q in _load_questions()]
         new_qs = []
         try:
             user_msg = ('【出题要求】%s\n【知识库资料】%s\n【学情数据】%s\n'
@@ -145,20 +142,22 @@ class QuestionSkill(Skill):
                         % (req or ('围绕知识点：' + kp) or '自由命题',
                            (kb_ctx or '（未检索到资料，按学科常识命题）')[:3500],
                            stu_ctx, count))
-            raw = llm_adapter.chat_json(self.system_prompt, user_msg, max_tokens=3000)
+            raw = llm_adapter.chat_json(self.system_prompt, user_msg, max_tokens=6000, timeout=120)
             if isinstance(raw, list):
                 items = raw
             elif isinstance(raw, dict):
                 items = raw.get('questions') or [raw]
             else:
                 items = []
-            for q in items[:count]:
+            for q in items[:count * 2]:
                 try:
                     qt = str(q.get('type', ''))
                     if '选' in qt:
                         q['type'] = '选择'
                     elif '填' in qt:
                         q['type'] = '填空'
+                    else:
+                        continue
                     ans = q.get('answer', -1)
                     if isinstance(ans, str):
                         ans = ans.strip().rstrip('.').upper()
@@ -169,33 +168,33 @@ class QuestionSkill(Skill):
                         while len(q['options']) < 4:
                             q['options'].append('以上都不对')
                         q.setdefault('analysis', '')
-                        new_qs.append(q)
                     elif q.get('type') == '填空' and q.get('options'):
                         q['answer'] = 0
                         q.setdefault('analysis', '')
-                        new_qs.append(q)
+                    else:
+                        continue
                 except (ValueError, TypeError):
                     continue
-            used_llm = bool(new_qs)
-            if not new_qs:
-                self._last_llm_err = 'LLM 返回 %d 题但均不合格式' % len(items)
+                if services._is_dup(str(q['q']), bank_texts):
+                    continue
+                bank_texts.append(str(q['q']))
+                new_qs.append(q)
+                if len(new_qs) >= count:
+                    break
         except Exception as e:
-            self._last_llm_err = str(e)[:150]
-
-        source = 'agent 思考出题' if used_llm else '题库组卷'
-        if not used_llm and self._last_llm_err:
-            source = '题库组卷（LLM：%s）' % self._last_llm_err
-        pool = bank if bank else _load_questions()
-        if not bank and not used_llm and 'LLM' not in source:
-            source = '题库组卷（全库抽题）'
+            return {'ok': False, 'output': '❌ 出题失败：%s（未入库，不降级组卷）' % str(e)[:150],
+                    'record_file': ''}
+        if not new_qs:
+            return {'ok': False,
+                    'output': '❌ 出题失败：LLM 输出不合格式或与题库重复（未入库，不降级组卷）',
+                    'record_file': ''}
+        source = 'agent 思考出题'
         saved = []
-        for q in new_qs if used_llm else random.sample(pool, min(count, len(pool))):
+        for q in new_qs:
             q.setdefault('source', source)
             q.setdefault('analysis', '')
             qid = teacher_tools.add_question(dict(q))
             saved.append((qid, q))
-        if not saved:
-            return {'ok': False, 'output': '❌ 出题失败（未入库）', 'record_file': ''}
 
         # ===== 输出：题面可见 + 答案解析折叠 =====
         front, hidden = [], []
@@ -207,10 +206,8 @@ class QuestionSkill(Skill):
                 qid, q['options'][q['answer']] if q['options'] else '',
                 q.get('analysis') or '（解析待补充）'))
         think = ''
-        if used_llm:
-            from .adapters import llm_adapter as _llm
-            if _llm.last_thinking:
-                think = '\n\n🧠 **模型思考**：' + _llm.last_thinking[:350] + '…'
+        if llm_adapter.last_thinking:
+            think = '\n\n🧠 **模型思考**：' + llm_adapter.last_thinking[:350] + '…'
         output = ('📝 已出 %d 道全新题（%s）：%s\n\n%s\n\n'
                   '<details><summary>🔑 答案与解析（点击展开）</summary>\n\n%s\n\n</details>'
                   % (len(saved), source, think,
@@ -229,7 +226,7 @@ class ErrataSkill(Skill):
     desc = '提交勘误并可直接修正知识库，生成勘误记录'
     system_prompt = (
         '你是编译原理知识库审校。给定文档与勘误内容，输出 JSON：'
-        '{"file":"文档名","before":"原文","after":"改为","note":"勘误依据"。'
+        '{"file":"文档名","before":"原文","after":"改为","note":"勘误依据"}。'
         'before 必须逐字来自原文，after 必须科学正确。')
     rules = ['before 必须在原文中存在', '改动最小化', '记录勘误依据', '生成勘误记录文档']
     tools = ['kb.read', 'kb.replace', 'errata.save', 'kb.record']
@@ -242,7 +239,7 @@ class ErrataSkill(Skill):
         if not file or not before or not after:
             return {'ok': False, 'output': '❌ 需要 file / before / after 三个参数（未入库）', 'record_file': ''}
         try:
-            page = __import__('app.backend.adapters.wiki_adapter', fromlist=['x']).get_page(file)
+            page = wiki_adapter.get_page(file)
         except Exception:
             return {'ok': False, 'output': '❌ 文档不存在：%s' % file, 'record_file': ''}
         if before not in page['body']:
@@ -284,10 +281,11 @@ class HomeworkSkill(Skill):
                 title, detail = r.get('title', ''), r.get('detail', '')
                 kp = kp or r.get('kp', '')
                 due = due or r.get('due_date', '')
-            except Exception:
-                pass
+            except Exception as e:
+                return {'ok': False, 'output': '❌ 作业代拟失败：%s（未入库）' % str(e)[:150],
+                        'record_file': ''}
         if not title:
-            return {'ok': False, 'output': '❌ 缺少作业标题（未入库）', 'record_file': ''}
+            return {'ok': False, 'output': '❌ LLM 未返回有效作业标题（未入库）', 'record_file': ''}
         hid = teacher_tools.add_homework(title, detail, kp, '', due, user.get('display_name', ''))
         output = '📋 作业已发布：**%s**\n- 知识点：%s\n- 截止：%s\n- 说明：%s' % (
             title, kp or '综合', due or '未定', detail[:120] or '（无）')
@@ -301,29 +299,39 @@ class QuizSkill(Skill):
     name = 'quiz'
     label = '✏️ 自测'
     role = 'student'
-    desc = '按知识点从题库组一份小测卷（答案另附于记录）'
-    system_prompt = ''
-    rules = ['题目全部来自题库（答案已核验）', '按知识点定向组卷', '答案写入记录不发给学生', '生成自测记录文档']
-    tools = ['questions.bank', 'kb.record']
+    desc = '结合学情与能力轨迹 LLM 思考命制全新小测卷（与题库去重，答案另附于记录）'
+    system_prompt = services.QUIZ_SYSTEM
+    rules = ['LLM 结合学情/能力轨迹命题', '全新题、与题库查重通过', '答案写入记录不发给学生', '生成自测记录文档']
+    tools = ['db.weakness', 'profile.trajectory', 'llm.think_generate', 'questions.save', 'kb.record']
 
     def run(self, params, user):
         kp = params.get('kp', '').strip()
         count = int(params.get('count', 3))
-        pool = _load_questions()
-        if kp:
-            hit = [q for q in pool if kp in q['kp'] or q['kp'] in kp]
-            pool = hit or pool
-        picked = random.sample(pool, min(count, len(pool)))
-        paper = '\n'.join('%d.【%s】%s\n   %s' % (i + 1, q['kp'], q['q'],
+        sid = int(params.get('student_id', 0) or 0)
+        try:
+            picked = services.llm_quiz(kp, count, sid)
+        except Exception as e:
+            return {'ok': False, 'output': '❌ 自测题生成失败：%s（未入库，不降级组卷）' % str(e)[:150],
+                    'record_file': ''}
+        saved = []
+        for q in picked:
+            qid = teacher_tools.add_question(dict(q))
+            saved.append((qid, q))
+        paper = '\n'.join('%d.【%s·%s】%s\n   %s' % (i + 1, q['kp'], q['qtype'], q['q'],
                           '　'.join('%s. %s' % ('ABCD'[j], o) for j, o in enumerate(q['options']))
-                          if q['type'] == '选择' else '（填空）')
-                          for i, q in enumerate(picked))
-        ans = '\n'.join('%d. 答案：%s（%s）' % (i + 1, q['options'][q['answer']], q['source'])
-                        for i, q in enumerate(picked))
-        output = ('📖 小测卷（%d 题%s）：\n%s\n\n做完可在「自测刷题」UI 交卷自动判分，或直接问我答案。'
-                  % (len(picked), '，知识点：' + kp if kp else '', paper))
-        return self._finish(output, '自测组卷 · %s' % (kp or '综合'),
-                            '## 试卷\n%s\n\n## 标准答案（核验来源：题库）\n%s\n' % (paper, ans),
+                          if q['type'] == '选择' else '　（填空）')
+                          for i, (qid, q) in enumerate(saved))
+        ans = '\n'.join('%d.[%s] 答案：%s\n　解析：%s' % (i + 1, qid, q['options'][q['answer']],
+                        q.get('analysis') or '（解析待补充）') for i, (qid, q) in enumerate(saved))
+        think = ''
+        from .adapters import llm_adapter as _llm
+        if _llm.last_thinking:
+            think = '\n\n🧠 **模型思考**：' + _llm.last_thinking[:350] + '…'
+        output = ('📖 小测卷（%d 道全新题%s）：\n%s%s\n\n做完可在「自测刷题」UI 交卷自动判分，答案在记录中。'
+                  % (len(saved), '，知识点：' + kp if kp else '，按学情薄弱点配比', paper, think))
+        return self._finish(output, '自测组卷 · %s' % (kp or '按学情'),
+                            '## 试卷\n%s\n\n## 标准答案与解析（不发给学生）\n%s\n%s'
+                            % (paper, ans, think),
                             [kp] if kp else [], {'paper': paper, 'answers': ans})
 
 
@@ -351,10 +359,15 @@ class DiagnosisSkill(Skill):
             r = llm_adapter.chat_json(self.system_prompt,
                                       '学生数据：%s。%s' % ('；'.join(lines),
                                        params.get('req') or '请诊断并给 2-3 条训练建议。'))
+            if isinstance(r, list):
+                r = r[0] if r and isinstance(r[0], dict) else {'training': [str(x) for x in r]}
             summary = r.get('summary', summary)
-            training = r.get('training', [])
-        except Exception:
-            training = ['先重做错题本中「%s」的题' % top[0]['kp'], '精读对应知识点页后做变式训练']
+            training = [str(t).strip() for t in r.get('training', []) if str(t).strip()]
+        except Exception as e:
+            return {'ok': False, 'output': '❌ 诊断生成失败：%s（未入库，不降级套话）' % str(e)[:150],
+                    'record_file': ''}
+        if not training:
+            return {'ok': False, 'output': '❌ 诊断生成失败：训练方案为空（未入库）', 'record_file': ''}
         output = ('🎯 诊断：%s\n\n薄弱排序：\n%s\n\n训练方案：\n%s'
                   % (summary, '\n'.join(lines), '\n'.join('- ' + t for t in training)))
         return self._finish(output, '薄弱诊断记录',
@@ -368,37 +381,39 @@ class PlanSkill(Skill):
     name = 'plan'
     label = '📅 复习计划'
     role = 'student'
-    desc = '按考试日期与薄弱点生成逐天复习计划，生成计划记录'
-    system_prompt = ''
-    rules = ['计划按考试倒计时逐天拆解', '优先级=薄弱程度×考点权重', '规则引擎生成（瞬时、精确）', '生成计划记录文档']
-    tools = ['db.weakness', 'graph.weights', 'plan.rule_engine', 'kb.record']
+    desc = 'LLM 结合学情、错因分布与能力轨迹生成逐天复习计划（倒计时精确）'
+    system_prompt = services.PLAN_SYSTEM
+    rules = ['LLM 结合学情/错因/能力轨迹生成', '天数与考试倒计时精确一致', '任务逐天递进、针对错因给动作', '生成计划记录文档']
+    tools = ['db.weakness', 'profile.trajectory', 'llm.think_generate', 'kb.record']
 
     def run(self, params, user):
         sid = int(params.get('student_id', 0) or 0)
         exam_date = params.get('exam_date', '').strip()
         if not exam_date:
             exam_date = (datetime.date.today() + datetime.timedelta(days=21)).isoformat()
-        weakness = dbm.weakness_ranking(sid) if sid else []
-        if not weakness:
-            weakness = [{'kp': '综合复习', 'accuracy': 0.5, 'total': 0, 'error_causes': {}}]
-        import json as _j
-        graph = _j.load(io.open(config.graph_path(), encoding='utf-8'))
-        weights = {n['name']: n.get('weight', 5) for n in graph['nodes'] if n['type'] == 'knowledge_point'}
-        plan = services.generate_plan(exam_date, weakness, weights)
+        try:
+            plan = services.llm_plan(exam_date, sid, params.get('req', ''))
+        except Exception as e:
+            return {'ok': False, 'output': '❌ 复习计划生成失败：%s（未入库，不降级规则排程）' % str(e)[:150],
+                    'record_file': ''}
         if sid:
             dbm.save_plan(sid, exam_date, plan)
         day_lines = '\n'.join('- **Day %d（%s）**：%s' % (
             d['day'], d['date'], '；'.join('%s %s（目标：%s）' % (t['kp'], t['action'], t['goal']) for t in d['tasks']))
             for d in plan[:7])
-        output = '📅 距考试 %d 天，复习计划已生成（倒计时精确匹配）：\n%s%s' % (
-            len(plan), day_lines, '\n- ……（完整计划见记录）' if len(plan) > 7 else '')
+        think = ''
+        from .adapters import llm_adapter as _llm
+        if _llm.last_thinking:
+            think = '\n\n🧠 **模型思考**：' + _llm.last_thinking[:350] + '…'
+        output = '📅 距考试 %d 天，复习计划已生成（结合学情与能力轨迹，倒计时精确）：\n%s%s%s' % (
+            len(plan), day_lines, '\n- ……（完整计划见记录）' if len(plan) > 7 else '', think)
         body = '考试日期：%s\n生成时间：%s\n\n%s' % (
             exam_date, datetime.datetime.now().strftime('%Y-%m-%d %H:%M'),
             '\n'.join('- Day %d（%s）：%s' % (d['day'], d['date'],
                                              '；'.join('%s %s｜%s' % (t['kp'], t['action'], t['goal']) for t in d['tasks']))
                       for d in plan))
-        return self._finish(output, '复习计划 · 考试 %s' % exam_date, body,
-                            [w['kp'] for w in weakness[:3]], {'days': len(plan)})
+        return self._finish(output, '复习计划 · 考试 %s' % exam_date, body + think,
+                            [], {'days': len(plan)})
 
 
 # ================= 7. 变式训练（学生） =================
@@ -406,47 +421,36 @@ class VariantSkill(Skill):
     name = 'variant'
     label = '🔁 变式训练'
     role = 'student'
-    desc = '给一道原型题或章节内容，后端大模型生成同源变式题（检查后入库）'
-    system_prompt = (
-        '你是编译原理命题专家。根据给定的【原型题目】或【章节内容】，生成一道同源变式题：'
-        '变参数、变情境、变设问角度，难度与原型相当。只输出 JSON：'
-        '{"question":"题干","answer":{"...":"..."},"steps":["步骤1","步骤2"],"hint":"先给思路提示，不剧透答案"}。'
-        '答案必须完整正确可验证，严禁编造教材页码或题号。')
-    rules = ['与原型/章节同源同难度', '答案完整正确可验证', '讲解先提示后解答', '检查后入库记录']
-    tools = ['llm.generate', 'variant.template_fallback', 'variant.rule_check', 'kb.record']
+    desc = 'LLM 对原型题/章节内容生成同源变式题（查重通过后入库）'
+    system_prompt = services.VARIANT_SYSTEM
+    rules = ['与原型/章节同源同难度、换情境设问', '与已出题目查重不重复', '答案完整正确可验证', '检查后入库记录']
+    tools = ['llm.think_generate', 'variant.dedup', 'profile.trajectory', 'kb.record']
 
     def run(self, params, user):
         kp = params.get('kp', '').strip() or 'LL(1)文法'
         req = params.get('req', '')
         proto = params.get('proto', '') or req
-        v = None
-        used_llm = False
-        # 有实质原型/内容（>15字）→ LLM 生成同源变式
-        if len(proto.strip()) > 15:
-            try:
-                r = llm_adapter.chat_json(
-                    self.system_prompt,
-                    '原型/章节内容：\n%s\n\n所属知识点：%s' % (proto, kp))
-                if r.get('question') and r.get('answer'):
-                    v = {'question': r['question'], 'answer': r['answer'],
-                         'steps': r.get('steps', []), 'hint': r.get('hint', '先分析原型的考点')}
-                    used_llm = True
-            except Exception:
-                pass
-        if not v:
-            v = services.variant_for_kp(kp)   # 模板兜底（答案规则核验）
+        sid = int(params.get('student_id', 0) or 0)
+        try:
+            v = services.llm_variant(kp, proto, req, sid)
+        except Exception as e:
+            return {'ok': False, 'output': '❌ 变式题生成失败：%s（未入库，不降级模板）' % str(e)[:150],
+                    'record_file': ''}
         ans = v['answer']
         ans_s = '\n'.join('- %s：%s' % (k, x) for k, x in ans.items()) if isinstance(ans, dict) else str(ans)
         if not ans_s.strip():
             return {'ok': False, 'output': '❌ 检查未通过：答案为空（未入库）', 'record_file': ''}
         if user.get('role') == 'student':
-            dbm.save_variant(int(params.get('student_id', 0) or 0), kp, v)
-        mode = 'LLM 同源生成' if used_llm else '模板生成（规则核验）'
-        output = ('🔁 变式题【%s】（%s）：\n%s\n\n💡 提示：%s\n\n（完整解答见知识库记录）'
-                  % (kp, mode, v['question'], v['hint']))
-        body = ('## 变式题（%s）\n%s\n\n## 提示\n%s\n\n## 标准解答\n%s\n\n## 解题步骤\n%s\n'
-                % (mode, v['question'], v['hint'], ans_s, '\n'.join('- ' + s for s in v['steps'])))
-        return self._finish(output, '变式训练 · %s' % kp, body, [kp])
+            dbm.save_variant(sid, kp, v)
+        think = ''
+        from .adapters import llm_adapter as _llm
+        if _llm.last_thinking:
+            think = '\n\n🧠 **模型思考**：' + _llm.last_thinking[:350] + '…'
+        output = ('🔁 变式题【%s】（LLM 同源生成·查重通过）：\n%s%s\n\n💡 提示：%s\n\n（完整解答见知识库记录）'
+                  % (kp, v['question'], think, v['hint']))
+        body = ('## 变式题（LLM 同源生成）\n%s\n\n## 提示\n%s\n\n## 标准解答\n%s\n\n## 解题步骤\n%s\n'
+                % (v['question'], v['hint'], ans_s, '\n'.join('- ' + s for s in v['steps'])))
+        return self._finish(output, '变式训练 · %s' % kp, body + think, [kp])
 
 
 # ================= 知识库构建工作流（教师，可复用到任意课程） =================
@@ -543,16 +547,19 @@ class KbExtractSkill(Skill):
             written.append(fn)
         if not written:
             return {'ok': False, 'output': '❌ 未提取到任何页面（未入库）', 'record_file': ''}
-        # 重建图谱
+        # 重建图谱（失败如实报告，不谎报）
+        rebuilt = False
         try:
             import subprocess, sys as _sys
-            subprocess.run([_sys.executable,
-                            os.path.join(os.path.dirname(config.BASE_DIR), 'tmp', 'build_graph.py')],
-                           capture_output=True, timeout=30)
+            r2 = subprocess.run([_sys.executable,
+                                 os.path.join(os.path.dirname(config.BASE_DIR), 'tmp', 'build_graph.py')],
+                                capture_output=True, timeout=30)
+            rebuilt = r2.returncode == 0
         except Exception:
-            pass
-        output = ('🧬 已从「%s」提取 %d 个知识点页并入库（图谱已重建）：\n%s\n'
+            rebuilt = False
+        output = ('🧬 已从「%s」提取 %d 个知识点页并入库（%s）：\n%s\n'
                   '下一步：/check 体检知识库' % (src_name, len(written),
+                                              '图谱已重建' if rebuilt else '⚠️ 图谱重建失败，请手动 /graph',
                                               '\n'.join('- ' + f for f in written)))
         body = '来源：%s\n\n## 生成页面\n%s\n\n## 要求\n%s\n' % (
             src_name, '\n'.join('- %s' % f for f in written), req or '（无）')
