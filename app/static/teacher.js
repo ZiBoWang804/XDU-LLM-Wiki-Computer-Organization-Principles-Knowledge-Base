@@ -11,6 +11,7 @@ function logout() {
 }
 
 const COURSE_ID = localStorage.getItem('ta_course') || 'compiler';
+let COURSE_NAME = '';
 
 async function api(path, opts = {}) {
   opts.headers = { 'X-Token': TOKEN, 'X-Course-Id': COURSE_ID, ...(opts.headers || {}) };
@@ -70,14 +71,25 @@ let vaultPages = [], currentFile = '', histStack = [], histIdx = -1, treeCollaps
 async function loadVault() {
   vaultPages = await api('/api/wiki/pages');
   renderTree(vaultPages);
-  openPage('编译原理知识库.md');
+  // 默认打开课程首页：索引页 > 根目录 md > 任意 md；空库给出提示（不做搜索兜底）
+  const home = vaultPages.find(p => p.type === '索引页' && p.file.endsWith('.md'))
+    || vaultPages.find(p => p.file.endsWith('.md') && !p.file.includes('/'))
+    || vaultPages.find(p => p.file.endsWith('.md'));
+  if (home) {
+    openPage(home.file);
+  } else {
+    document.getElementById('crumb').textContent = (COURSE_NAME || '知识库');
+    document.getElementById('mdView').innerHTML =
+      '<p class="muted">该课程知识库暂无内容——可用「导入资料 → 提取知识点」构建。</p>';
+  }
 }
 
 function renderTree(pages) {
-  const order = ['知识点页', '专题页', '题库页', '题解页', '试卷页', '智能体记录', '索引页'];
+  const order = ['知识点页', '专题页', '题库页', '题解页', '试卷页', '智能体记录', '索引页', '文档附件', '其他'];
   const groups = {};
   pages.forEach(p => { (groups[p.type || '其他'] = groups[p.type || '其他'] || []).push(p); });
-  document.getElementById('fileTree').innerHTML = order.filter(t => groups[t]).map(t => {
+  const keys = order.filter(t => groups[t]).concat(Object.keys(groups).filter(t => !order.includes(t)));
+  document.getElementById('fileTree').innerHTML = keys.map(t => {
     const open = !treeCollapsed[t];
     return `<div class="tree-group">
       <div class="tree-folder" onclick="toggleFolder('${t}')">
@@ -102,7 +114,7 @@ function resolveWikiTarget(raw) {
       (p.knowledge_points || []).some(k => target.includes(k) || k.includes(target)));
     if (p) hit = p.file.replace(/\.md$/, '');
   }
-  return hit ? hit + '.md' : null;
+  return hit ? hit + (/\.pdf$/i.test(hit) ? '' : '.md') : null;
 }
 
 async function openPage(file, pushHist = true) {
@@ -151,6 +163,19 @@ async function openPage(file, pushHist = true) {
     return `<a class="wikilink" onclick="openPage('${t.replace(/'/g, '')}')" title="${t}">${(alias || target).trim()}</a>`;
   });
   view.innerHTML = marked.parse(body);
+  // 行内代码中的文件路径（如 原始资料/xxx.md）→ 可点击打开
+  view.querySelectorAll('code').forEach(c => {
+    const t = c.textContent.trim();
+    const hit = vaultPages.find(p => p.file === t || p.file === t + '.md');
+    if (hit && !c.closest('a')) {
+      const a = document.createElement('a');
+      a.className = 'wikilink';
+      a.title = hit.file;
+      a.textContent = t;
+      a.onclick = () => openPage(hit.file);
+      c.replaceWith(a);
+    }
+  });
   try {
     renderMathInElement(view, {
       delimiters: [{ left: '$$', right: '$$', display: true }, { left: '$', right: '$', display: false }],
@@ -175,11 +200,16 @@ function smartLookup(q) {
   if (!q.trim()) { document.getElementById('lookupResults').innerHTML = ''; return; }
   lookupTimer = setTimeout(async () => {
     const hits = await api('/api/wiki/search?q=' + encodeURIComponent(q));
-    document.getElementById('lookupResults').innerHTML = hits.map(h => `
+    const maxS = Math.max(...hits.map(x => x.score || 0), 1);
+    document.getElementById('lookupResults').innerHTML = hits.map(h => {
+      const rel = Math.round((h.score || 0) / maxS * 100);
+      return `
       <div class="lookup-item" onclick="lookupJump('${h.file}','${q.replace(/'/g, '')}','${(h.anchor||'').replace(/'/g, '')}')">
-        <div class="lk-file">${h.file.replace(/\.md$/, '')} <span class="muted">${h.chapter}</span></div>
+        <div class="lk-file">${h.file.replace(/\.md$/, '')} <span class="muted">${h.chapter}</span>
+          <span class="lk-rel${rel < 45 ? ' low' : ''}" title="关联度">${rel}%</span></div>
         <div class="lk-ex">${h.excerpt}</div>
-      </div>`).join('') || '<p class="muted">无匹配</p>';
+      </div>`;
+    }).join('') || '<p class="muted">无匹配</p>';
   }, 220);
 }
 
@@ -702,6 +732,7 @@ async function loadSkillChips() {
 
 // ---------- / 命令面板（Claudian 式） ----------
 function onChatInput(val) {
+  updateCtxStats();
   const menu = document.getElementById('cmdMenu');
   if (val.startsWith('/')) {
     const q = val.slice(1).toLowerCase().split(' ')[0];
@@ -806,6 +837,9 @@ async function runSkill(name, params = {}) {
   log.scrollTop = log.scrollHeight;
 }
 
+// 多轮对话历史（随 /api/ask 一起发模型，跨会话各自维护）
+let chatHistory = [];
+
 async function ask() {
   const input = document.getElementById('chatQ');
   let q = input.value.trim();
@@ -828,14 +862,19 @@ async function ask() {
   input.value = '';
   const greet = document.querySelector('.greet');
   if (greet) greet.remove();
+  const sendHistory = chatHistory.slice(-10);
   pushMsg('user', q);
+  chatHistory.push({ role: 'user', content: q.slice(0, 600) });
   const thinking = pushMsg('bot', `<span class="ta-tag">TeleAgent</span><br>🧠 模型思考中…（检索知识库）`);
   try {
     const r = await post('/api/ask', {
       question: q, student_id: 0,
       context_file: document.getElementById('ctxChip').dataset.file || '',
       hint_first: false, temperature: 0.3,
+      history: sendHistory,
     });
+    chatHistory.push({ role: 'assistant', content: (r.answer || '').replace(/<[^>]+>/g, ' ').slice(0, 600) });
+    updateCtxStats();
     const srcs = (r.sources || []).map(s =>
       `${s.file || s.document_name || ''}${s.chapter ? '（' + s.chapter + '）' : ''}`).join('；');
     thinking.innerHTML = `<span class="ta-tag">TeleAgent</span><br><div class="md-out">${marked.parse(r.answer || '')}</div>
@@ -889,7 +928,7 @@ const __chartObs = new ResizeObserver(() => { resizeAllCharts(); observeCharts()
 __chartObs.observe(document.getElementById('mainScroll'));
 observeCharts();
 
-loadVault();
+loadCourseBar().finally(() => loadVault());
 loadSkillChips();
 
 
@@ -907,9 +946,22 @@ async function loadCourseBar() {
     if (!bar) return;
     bar.innerHTML = courses.map(c =>
       `<option value="${c.id}" ${c.id === COURSE_ID ? 'selected' : ''}>${c.name}</option>`).join('');
+    COURSE_NAME = (courses.find(c => c.id === COURSE_ID) || {}).name || '';
+    applyCourseLabels();
   } catch (e) { }
 }
-loadCourseBar();
+
+// 课程名相关界面文案（切课后不残留旧课程名）
+function applyCourseLabels() {
+  const n = COURSE_NAME || '知识库';
+  const kb = document.getElementById('kbTitle');
+  if (kb) kb.textContent = n + '知识库';
+  const h1 = document.getElementById('pageTitle');
+  if (h1) h1.textContent = '教师端 · ' + n + '考点地图';
+  document.title = n + '考点地图 · 教师端';
+  const oh = document.querySelector('.onboard-hi');
+  if (oh) oh.textContent = 'TELEAGENT · ' + n + '考点地图';
+}
 
 
 // ================= 快速搜索弹窗（Obsidian 式 Quick Search） =================
@@ -937,7 +989,7 @@ function doSearch(q) {
     return;
   }
   window.__srTimer = setTimeout(async () => {
-    const hits = await api('/api/wiki/search?q=' + encodeURIComponent(q) + '&k=8');
+    const hits = await api('/api/wiki/search?q=' + encodeURIComponent(q) + '&k=12');
     srHits = hits; srIdx = 0;
     renderSearchResults(q);
   }, 200);
@@ -956,9 +1008,12 @@ function renderSearchResults(q) {
         m => '<mark>' + m + '</mark>');
       return '<div class="sr-snip">- ' + hl + '</div>';
     }).join('');
+    const maxS = Math.max(...srHits.map(x => x.score || 0), 1);
+    const rel = Math.round((h.score || 0) / maxS * 100);
     return `<div class="sr-item ${i === 0 ? 'sel' : ''}" data-i="${i}" onclick="pickSearch(${i})">
       <div class="sr-head">
         <span class="sr-name">${h.file.replace(/\.md$/, '').split('/').pop()}</span>
+        <span class="sr-rel${rel < 45 ? ' low' : ''}" title="关联度">${rel}%</span>
         <span class="sr-count">${h.match_count || 1} matches · ${h.chapter || ''}</span>
       </div>
       <div class="sr-snips">${snips}</div>
@@ -1007,18 +1062,27 @@ document.addEventListener('keydown', e => {
 });
 
 
-// 上下文统计条（Claudian 式：词数/字符数实时显示）
+// 上下文占用（Claudian 式：环形进度 + 百分比，会话+文档+引用+输入 ≈ 模型上下文窗口）
 function updateCtxStats() {
   const el = document.getElementById('ctxStats');
   if (!el) return;
   const chip = document.getElementById('ctxChip');
   const file = (chip && chip.dataset.file) || '';
-  const quote = typeof quotedText !== 'undefined' ? quotedText : '';
+  let quote = '';
+  try { quote = quotedText || ''; } catch (e) { }   // quotedText 声明在后，防 TDZ
   const q = (document.getElementById('chatQ') || {}).value || '';
-  const chars = quote.length + q.length;
-  const words = (quote + ' ' + q).split(/\s+/).filter(Boolean).length + (file ? 2 : 0);
-  const fname = file ? file.replace(/\.md$/, '').split('/').pop() + ' · ' : '';
-  el.textContent = fname + words + ' 词 ' + chars + ' 字符';
+  const histChars = chatHistory.reduce((n, m) => n + (m.content || '').length, 0);
+  const chars = histChars + quote.length + q.length + (file ? 1500 : 0);
+  const pct = Math.min(chars / 2 / 128000 * 100, 100);   // 粗估 token（字符/2）占 128K 窗口
+  const pctStr = pct < 10 ? pct.toFixed(1) : String(Math.round(pct));
+  const r = 6, c = 2 * Math.PI * r;
+  const off = c * (1 - pct / 100);
+  el.innerHTML = `<svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true">
+      <circle cx="8" cy="8" r="${r}" fill="none" stroke="var(--line)" stroke-width="2.2"></circle>
+      <circle cx="8" cy="8" r="${r}" fill="none" stroke="#d97757" stroke-width="2.2"
+        stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"
+        transform="rotate(-90 8 8)"></circle>
+    </svg><span>${pctStr}%</span>`;
 }
 
 
@@ -1118,6 +1182,7 @@ function saveSessions() {
 function newSession(silent) {
   sessions.push({ id: Date.now(), title: '新会话', time: new Date().toLocaleString('zh-CN', { hour12: false }), msgs: [] });
   curSess = sessions.length - 1;
+  chatHistory = [];
   saveSessions();
   if (!silent) {
     const log = document.getElementById('chatLog');
@@ -1132,6 +1197,11 @@ function switchSession(i) {
   const log = document.getElementById('chatLog');
   const s = sessions[i];
   if (!log || !s) return;
+  chatHistory = s.msgs.map(m => ({
+    role: m.cls === 'user' ? 'user' : 'assistant',
+    content: String(m.html || '').replace(/<[^>]+>/g, ' ').slice(0, 600),
+  })).filter(m => m.content.trim());
+  updateCtxStats();
   log.innerHTML = s.msgs.map(m => '<div class="msg ' + m.cls + '">' + m.html + '</div>').join('')
     || '<div class="greet"><div class="greet-title">TeleAgent</div><div class="greet-sub">Good day</div><div class="linked-chip" id="linkedChip">🔗 Linked content: 知识库</div></div>';
   document.querySelectorAll('.sess-item').forEach((el, j) => el.classList.toggle('sel', j === i));
@@ -1304,8 +1374,49 @@ setTimeout(() => {
     head.appendChild(pop);
     loadSessions();
     renderSessions();
+    updateCtxStats();
   }
 }, 150);
+
+// ================= 新手引导（首次进入 · ChatGPT 式欢迎卡） =================
+function showOnboarding() {
+  const log = document.getElementById('chatLog');
+  if (!log) return;
+  const acts = [
+    ['✏️', '智能出题', 'agent 查库 + 学情命制新题', "pickSkill('question')"],
+    ['📋', '布置作业', 'LLM 代拟 · 学生端立即可见', "pickSkill('homework')"],
+    ['🎯', '班级学情', '正确率热力 · 薄弱讲评建议', "openView('klass')"],
+    ['✅', '知识库体检', '覆盖率 / 图谱 / 题库一键体检', "runSkill('check', {})"],
+    ['🗺', '考点地图', '三级图谱 · 权重可视化', "openView('graph')"],
+    ['📝', '编辑 / 勘误', '直接改库或提交勘误单', "openView('edit')"],
+  ];
+  log.innerHTML = `<div class="onboard-wrap">
+    <div class="onboard-hi">TELEAGENT · 编译原理考点地图</div>
+    <div class="onboard-title">你好，${MYNAME} 👋</div>
+    <div class="onboard-sub">我是课程教学智能体。出题、作业、学情，都可以从这里开始——</div>
+    <div class="onboard-grid">
+      ${acts.map(([ic, t, d, fn]) => `
+        <div class="onboard-item" onclick="${fn}">
+          <div class="oi-ic">${ic}</div>
+          <div><b>${t}</b><p>${d}</p></div>
+        </div>`).join('')}
+    </div>
+    <div class="onboard-tip">
+      <b>/</b> 唤起技能面板　<b>@文档名</b> 切换关联资料　<b>YOLO</b> 开关控制写库<br>
+      技能产出自动入库「智能体记录」· 全程可追溯
+    </div>
+  </div>`;
+}
+if (!localStorage.getItem('ta_onboard_teacher')) {
+  localStorage.setItem('ta_onboard_teacher', '1');
+  showOnboarding();
+}
+
+// 模型芯片显示实际配置
+api('/api/config/status').then(c => {
+  const chip = document.getElementById('modelChip');
+  if (chip) chip.textContent = c.llm_model + (c.llm_configured ? '' : '（未配Key）');
+}).catch(() => { });
 
 
 // ================= IME 回车修复（中文输入法：组合期回车=确认+发送） =================

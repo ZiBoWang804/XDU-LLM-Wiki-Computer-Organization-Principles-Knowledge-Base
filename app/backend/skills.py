@@ -30,10 +30,6 @@ def write_record(kind: str, title: str, body: str, kps: list = None) -> str:
     return '智能体记录/' + fn
 
 
-def _load_questions():
-    return json.load(io.open(config.questions_path(), encoding='utf-8'))['questions']
-
-
 # ================= Skill 基类 =================
 class Skill:
     name = ''
@@ -78,12 +74,15 @@ class QuestionSkill(Skill):
     system_prompt = (
         '你是编译原理命题专家 agent，自主完成出题全流程。规则只有输出格式规范，命题思路自由发散：\n'
         '1. 通读给定的【知识库资料】与【学情数据】，自主判断该考哪个概念、什么难度；\n'
-        '2. 推理常见考法、易错陷阱，换情境/参数设计全新题——严禁照抄资料中的原题；\n'
+        '2. 推理常见考法、易错陷阱，换情境/参数设计全新题——不要照抄资料中的原题；\n'
         '3. 自检：答案唯一正确、干扰项合理、无歧义；\n'
-        '4. 输出 JSON：{"questions":[{"type":"选择|填空","kp":"知识点","qtype":"题型","q":"题干",'
-        '"options":["..."],"answer":0,"source":"命题依据","analysis":"完整解析：解题步骤+易错点"}]}\n'
-        '格式规范：选择题 4 选项且 answer 为正确项下标；填空题 options 只含 1 个标准答案；'
-        'analysis 写详细解答过程。')
+        '4. 输出格式（只输出 JSON）：\n'
+        '{"questions":[{"type":"选择","kp":"知识点","qtype":"题型","q":"题干",'
+        '"options":["选项文本(不带A/B前缀)","...","...","..."],"answer":1,"source":"命题依据",'
+        '"analysis":"完整解析：解题步骤+易错点"},\n'
+        '{"type":"填空","kp":"知识点","qtype":"题型","q":"题干______。",'
+        '"options":["标准答案"],"answer":0,"source":"命题依据","analysis":"解析"}]}\n'
+        '说明：选择题 4 个选项、answer 为正确项下标(0-3)；填空题 options 只含 1 个标准答案、answer 为 0。')
     rules = ['自主查库定考法（不指定知识点也能出）', '结合学情薄弱点命题',
              '题目全新原创、答案唯一', '解析完整（步骤+易错点）', '检查通过才入题库']
     tools = ['kb.search', 'profile.weakness', 'llm.think_generate', 'questions.save', 'kb.record']
@@ -133,61 +132,22 @@ class QuestionSkill(Skill):
         except Exception:
             stu_ctx = '（暂无学情数据）'
 
-        # ===== Agent 第三步：思考生成（题干+答案+解析；与题库查重，失败直接报错不降级） =====
-        bank_texts = [str(q.get('q', '')) for q in _load_questions()]
-        new_qs = []
+        # ===== Agent 第三步：思考生成（题干+答案+解析；格式不合直接报错） =====
         try:
             user_msg = ('【出题要求】%s\n【知识库资料】%s\n【学情数据】%s\n'
                         '请自主决定出什么题，出 %d 道。'
                         % (req or ('围绕知识点：' + kp) or '自由命题',
                            (kb_ctx or '（未检索到资料，按学科常识命题）')[:3500],
                            stu_ctx, count))
-            raw = llm_adapter.chat_json(self.system_prompt, user_msg, max_tokens=6000, timeout=120)
-            if isinstance(raw, list):
-                items = raw
-            elif isinstance(raw, dict):
-                items = raw.get('questions') or [raw]
-            else:
-                items = []
-            for q in items[:count * 2]:
-                try:
-                    qt = str(q.get('type', ''))
-                    if '选' in qt:
-                        q['type'] = '选择'
-                    elif '填' in qt:
-                        q['type'] = '填空'
-                    else:
-                        continue
-                    ans = q.get('answer', -1)
-                    if isinstance(ans, str):
-                        ans = ans.strip().rstrip('.').upper()
-                        ans = ord(ans) - 65 if len(ans) == 1 and 'A' <= ans <= 'Z' else int(ans) if ans.isdigit() else -1
-                    q['answer'] = int(ans) if not isinstance(ans, int) else ans
-                    if q.get('type') == '选择' and len(q.get('options', [])) >= 2 \
-                            and 0 <= q['answer'] < len(q.get('options', [])):
-                        while len(q['options']) < 4:
-                            q['options'].append('以上都不对')
-                        q.setdefault('analysis', '')
-                    elif q.get('type') == '填空' and q.get('options'):
-                        q['answer'] = 0
-                        q.setdefault('analysis', '')
-                    else:
-                        continue
-                except (ValueError, TypeError):
-                    continue
-                if services._is_dup(str(q['q']), bank_texts):
-                    continue
-                bank_texts.append(str(q['q']))
-                new_qs.append(q)
-                if len(new_qs) >= count:
-                    break
+            raw = llm_adapter.chat_json(self.system_prompt, user_msg,
+                                        timeout=services.TIMEOUT)
+            items = raw if isinstance(raw, list) else (
+                raw.get('questions') or [raw] if isinstance(raw, dict) else [])
+            if not items:
+                raise RuntimeError('LLM 未返回题目列表')
+            new_qs = [services._coerce_question(q, i + 1) for i, q in enumerate(items[:count])]
         except Exception as e:
-            return {'ok': False, 'output': '❌ 出题失败：%s（未入库，不降级组卷）' % str(e)[:150],
-                    'record_file': ''}
-        if not new_qs:
-            return {'ok': False,
-                    'output': '❌ 出题失败：LLM 输出不合格式或与题库重复（未入库，不降级组卷）',
-                    'record_file': ''}
+            return {'ok': False, 'output': '❌ 出题失败：%s' % str(e)[:150], 'record_file': ''}
         source = 'agent 思考出题'
         saved = []
         for q in new_qs:
@@ -446,7 +406,7 @@ class VariantSkill(Skill):
         from .adapters import llm_adapter as _llm
         if _llm.last_thinking:
             think = '\n\n🧠 **模型思考**：' + _llm.last_thinking[:350] + '…'
-        output = ('🔁 变式题【%s】（LLM 同源生成·查重通过）：\n%s%s\n\n💡 提示：%s\n\n（完整解答见知识库记录）'
+        output = ('🔁 变式题【%s】（LLM 同源生成）：\n%s%s\n\n💡 提示：%s\n\n（完整解答见知识库记录）'
                   % (kp, v['question'], think, v['hint']))
         body = ('## 变式题（LLM 同源生成）\n%s\n\n## 提示\n%s\n\n## 标准解答\n%s\n\n## 解题步骤\n%s\n'
                 % (v['question'], v['hint'], ans_s, '\n'.join('- ' + s for s in v['steps'])))

@@ -50,8 +50,9 @@ def get_page(name: str) -> dict:
     return p
 
 
-def search(keyword: str, limit: int = 5) -> list:
-    """混合检索：embedding 语义检索（优先）+ 关键词/frontmatter 加权（补充）。"""
+def search(keyword: str, limit: int = 30) -> list:
+    """混合检索：embedding 语义检索（优先）+ 关键词/frontmatter 加权（补充）。
+    正文命中也给足权重——内容里出现关键词的文件（如习题）同样能进结果。"""
     scored = []
     kw = keyword.lower()
     pages_cache = {}
@@ -70,14 +71,15 @@ def search(keyword: str, limit: int = 5) -> list:
         for epd in fm.get('exam_points', []):
             if kw in str(epd.get('name', '')).lower():
                 score += 4
-        score += min(p['body'].lower().count(kw), 5)
+        score += min(p['body'].lower().count(kw), 20)
         if score > 0:
             cnt, snips = _snippets(p['body'], keyword)
             scored.append({'file': page['file'], 'score': score, 'type': fm.get('type', ''),
                            'chapter': fm.get('chapter', ''),
                            'excerpt': _excerpt(p['body'], keyword),
                            'anchor': _anchor(p['body'], keyword),
-                           'match_count': cnt or 1, 'snippets': snips or [_excerpt(p['body'], keyword)]})
+                           'match_count': cnt or 1, 'snippets': snips or [_excerpt(p['body'], keyword)],
+                           'kw_hit': True})
     # 语义检索增强（向量模型可用时）
     try:
         from . import embed_adapter
@@ -96,11 +98,17 @@ def search(keyword: str, limit: int = 5) -> list:
                                    'chapter': p['frontmatter'].get('chapter', ''),
                                    'excerpt': _excerpt(p['body'], keyword),
                                    'anchor': _anchor(p['body'], keyword),
-                                   'match_count': cnt or 0, 'snippets': snips or [_excerpt(p['body'], keyword)]})
+                                   'match_count': cnt or 0, 'snippets': snips or [_excerpt(p['body'], keyword)],
+                                   'kw_hit': False})
     except Exception:
         pass
-    scored.sort(key=lambda x: -x['score'])
-    return scored[:limit]
+    # 关键词命中的文件全部保留（按分数排序），语义结果只做补充、不挤掉关键词命中
+    kw_hits = sorted((s for s in scored if s.get('kw_hit')), key=lambda x: -x['score'])
+    sem_hits = sorted((s for s in scored if not s.get('kw_hit')), key=lambda x: -x['score'])
+    out = kw_hits + sem_hits
+    for s in out:
+        s.pop('kw_hit', None)
+    return out[:max(limit, len(kw_hits))]
 
 
 def _excerpt(body: str, keyword: str, width: int = 160) -> str:

@@ -701,6 +701,308 @@
    "analysis": "FIRST(A)={b,ε}，A 可空，故 FIRST(Aa)={b}∪{a}={a,b}，SELECT(S→Aa)={a,b}；SELECT(S→b)={b}。同一非终结符 S 的两候选式 SELECT 集交于 b，产生表项冲突，故非 LL(1)。易错点：遗漏 ε∈FIRST(A) 使 a 并入，误判为不冲突；ε 产生式本身并非禁用。",
    "source": "agent 思考出题",
    "id": "q48"
+  },
+  {
+   "type": "选择",
+   "kp": "语义分析（第7章：类型检查与类型转换）",
+   "qtype": "概念辨析+情境应用",
+   "q": "编译程序处理如下类C语言程序片段：int n; float r; r = n * 2 + 1.5; 关于语句 r = n * 2 + 1.5; 在语义分析与中间代码生成阶段的处理，下列叙述正确的是",
+   "options": [
+    "子表达式 n * 2 为 int 型，与实型常量 1.5 相加前需把 int 型值转换为 float 型；语义分析借助符号表完成类型检查并确定这种隐式转换，表达式结果可直接赋给 float 型变量 r",
+    "该语句含有语法错误，因为 int 型变量与 float 型常量不允许出现在同一个表达式中",
+    "若该语句存在类型不相容问题，应由词法分析阶段扫描字符时发现并报告",
+    "因为 r 是 float 型而表达式中出现了 int 型子表达式，所以该语句一定不能通过编译"
+   ],
+   "answer": 0,
+   "source": "第7章 7.1 语义分析的任务（类型检查、类型转换、符号表）；分析设计题题库第1题“错误信息的编译阶段判断”中“类型不匹配属语义分析”的判据",
+   "analysis": "解题步骤：①先分清各阶段职责——词法分析只按构词规则识别单词，语法分析只检查结构（如括号、分号、if-else 配对），语义分析才依据符号表检查类型相容性并做隐式类型转换；②本语句结构完全合法：n*2 是 int 型，与 1.5（float）相加时按类型提升规则把 int 值转换为 float，整个表达式为 float 型，赋给 float 型变量 r 类型相容，无需报错；③因此只有“语义分析完成类型检查并确定隐式转换”的叙述正确。易错点：B 把“类型混合运算”误当成语法错误（语法与类型是两回事，混合运算本身合法）；C 把语义错误归给词法分析（词法阶段看不到类型信息）；D 把“含有 int 型子表达式”误判为类型不相容（int 可提升为 float，方向正确的转换是合法的）。若反过来把 float 表达式直接赋给 int 型变量而不做显式转换，才可能触发语义警告或错误。",
+   "id": "q49"
+  },
+  {
+   "type": "选择",
+   "kp": "LL(1)文法",
+   "qtype": "概念判断",
+   "q": "LL(1)文法要求：对同一非终结符 A 的任意两个不同产生式 A→α、A→β，必须有（　）。",
+   "options": [
+    "SELECT(A→α)∩SELECT(A→β)=∅",
+    "FIRST(α)∩FIRST(β)≠∅",
+    "FOLLOW(A)∩FIRST(α)=∅",
+    "SELECT(A→α)=SELECT(A→β)"
+   ],
+   "answer": 0,
+   "analysis": "LL(1)分析表无冲突的条件是同一非终结符各产生式的SELECT集两两不相交，故交集为空。只比较FIRST或误认相等均错。",
+   "source": "agent 思考出题",
+   "id": "q50"
+  },
+  {
+   "type": "选择",
+   "kp": "FIRST/FOLLOW/SELECT集",
+   "qtype": "计算",
+   "q": "文法 G[S]：S→AB，A→a|ε，B→bA|c。则 FOLLOW(A) 等于（　）。",
+   "options": [
+    "{b,c}",
+    "{b,c,#}",
+    "{#,a}",
+    "{b,c,a,#}"
+   ],
+   "answer": 1,
+   "analysis": "S→AB 中 A 后为 B，FIRST(B)={b,c} 加入 FOLLOW(A)；A 在 B→bA 末尾，FOLLOW(B)={#} 也加入。故为 {b,c,#}。",
+   "source": "agent 思考出题",
+   "id": "q51"
+  },
+  {
+   "type": "填空",
+   "kp": "FIRST/FOLLOW/SELECT集",
+   "qtype": "计算",
+   "q": "文法 G[S]：S→aA，A→BC，B→b|ε，C→c|ε。则 SELECT(B→ε)=______。",
+   "options": [
+    "{c,#}"
+   ],
+   "answer": 0,
+   "analysis": "SELECT(B→ε)=FOLLOW(B)。B后为C，FIRST(C)={c,ε}，取{c}；C可空，加入FOLLOW(A)={#}。故 {c,#}。",
+   "source": "agent 思考出题",
+   "id": "q52"
+  },
+  {
+   "type": "选择",
+   "kp": "左递归",
+   "qtype": "应用",
+   "q": "文法 G[E]：E→E+T|T，T→T*F|F，F→(E)|i。消除 E 的直接左递归后，E' 的产生式为（　）。",
+   "options": [
+    "E'→+T E' | ε",
+    "E'→+T E' | T",
+    "E'→+T | ε",
+    "E'→T E' | ε"
+   ],
+   "answer": 0,
+   "analysis": "E→E+T|T 消除直接左递归得 E→T E'，E'→+T E'|ε。注意把左递归后缀 +T 放入新非终结符产生式。",
+   "source": "agent 思考出题",
+   "id": "q53"
+  },
+  {
+   "type": "选择",
+   "kp": "语法树与二义性",
+   "qtype": "理解",
+   "q": "文法 G[S]：S→aSb|ab。句子 aabb 的语法树中，根结点 S 的直接孩子从左到右是（　）。",
+   "options": [
+    "a，S，b",
+    "a，b",
+    "S，b",
+    "a，S"
+   ],
+   "answer": 0,
+   "analysis": "推导 S=>aSb=>aabb，第二步用 S→ab。根结点 S 由 S→aSb 展开，直接孩子为 a、S、b，叶子为 a、a、b、b。",
+   "source": "agent 思考出题",
+   "id": "q54"
+  },
+  {
+   "type": "选择",
+   "kp": "LL(1)文法",
+   "qtype": "概念判断",
+   "q": "若某非终结符A有产生式A→α和A→β，且FIRST(α)∩FIRST(β)≠∅，则关于该文法，下列判断正确的是（　）。",
+   "options": [
+    "一定不是LL(1)文法",
+    "一定是LL(1)文法",
+    "只需提取公共左因子后一定成为LL(1)文法",
+    "说明α和β都能推出ε"
+   ],
+   "answer": 0,
+   "analysis": "FIRST交集非空会使两产生式的SELECT集（含FIRST）相交，违反LL(1)要求；提取左因子不一定保证，也不能说明可空。",
+   "source": "agent 思考出题",
+   "id": "q55"
+  },
+  {
+   "type": "填空",
+   "kp": "FIRST/FOLLOW/SELECT集",
+   "qtype": "集合计算",
+   "q": "文法G[S]：S→ABa，A→b|ε，B→c|ε。则FOLLOW(B)=______（集合元素用逗号分隔，结束符用#表示）。",
+   "options": [
+    "{a}"
+   ],
+   "answer": 0,
+   "analysis": "B在产生式S→ABa中后紧跟终结符a，故FOLLOW(B)只含a；B可空不改变其后随，不能把#加入。",
+   "source": "agent 思考出题",
+   "id": "q56"
+  },
+  {
+   "type": "选择",
+   "kp": "FIRST/FOLLOW/SELECT集",
+   "qtype": "集合计算",
+   "q": "文法G[S]：S→AB，A→x|ε，B→y|ε。SELECT(A→ε)=（　）。",
+   "options": [
+    "{y}",
+    "{#}",
+    "{y,#}",
+    "{x,y}"
+   ],
+   "answer": 2,
+   "analysis": "A→ε的SELECT=FOLLOW(A)。A后接B，FIRST(B)={y,ε}；先取y，B可空再并FOLLOW(S)={#}，得{y,#}。漏#是典型错误。",
+   "source": "agent 思考出题",
+   "id": "q57"
+  },
+  {
+   "type": "选择",
+   "kp": "左递归",
+   "qtype": "间接左递归展开",
+   "q": "文法G[S]：S→Aa|b，A→Sd|e。将S的产生式代入A→Sd以展开间接左递归，展开后A的产生式为（　）。",
+   "options": [
+    "A→Aad|bd|e",
+    "A→Aa|bd|e",
+    "A→Ad|bd|e",
+    "A→Sd|bd|e"
+   ],
+   "answer": 0,
+   "analysis": "A→Sd，用S→Aa|b替换S，得A→(Aa|b)d=Aad|bd，再加原产生式A→e。易错漏掉后缀d或误写Aa。",
+   "source": "agent 思考出题",
+   "id": "q58"
+  },
+  {
+   "type": "选择",
+   "kp": "推导与归约",
+   "qtype": "最右推导步骤",
+   "q": "文法G[S]：S→aST|a，T→b。对句子aab进行最右推导，第二步使用的产生式是（　）。",
+   "options": [
+    "S→aST",
+    "T→b",
+    "S→a",
+    "T→Tc"
+   ],
+   "answer": 1,
+   "analysis": "最右推导每步替换最右非终结符：S⇒aST⇒aSb⇒aab，故第二步用T→b。易错先展开S→a。",
+   "source": "agent 思考出题",
+   "id": "q59"
+  },
+  {
+   "type": "选择",
+   "kp": "LL(1)文法",
+   "qtype": "概念理解",
+   "q": "在LL(1)预测分析表中，若当前栈顶非终结符为A、面临输入符为a，而 M[A,a] 为空，则说明（　）",
+   "options": [
+    "应使用产生式 A→ε 继续分析",
+    "当前输入串在a处存在语法错误",
+    "文法含有左递归，需改写",
+    "应回溯到上一步重新选择产生式"
+   ],
+   "answer": 1,
+   "analysis": "LL(1)分析表项为空表示没有产生式可匹配当前非终结符A和输入符a，无法继续推导，故判定输入串语法错误；LL(1)不需回溯，空项也不自动用A→ε。",
+   "source": "agent 思考出题",
+   "id": "q60"
+  },
+  {
+   "type": "填空",
+   "kp": "FIRST/FOLLOW/SELECT集",
+   "qtype": "集合计算",
+   "q": "文法 G[S]：S→aA | B，A→bB | ε，B→cA | d。则 FOLLOW(A)=______（集合元素用逗号分隔，结束符用#表示）",
+   "options": [
+    "#"
+   ],
+   "answer": 0,
+   "analysis": "由S→aA得#∈FOLLOW(A)；由A→bB得FOLLOW(A)⊆FOLLOW(B)；由B→cA得FOLLOW(B)⊆FOLLOW(A)，且无其他终结符加入，故FOLLOW(A)=FOLLOW(B)={#}。",
+   "source": "agent 思考出题",
+   "id": "q61"
+  },
+  {
+   "type": "选择",
+   "kp": "左递归",
+   "qtype": "消除直接左递归",
+   "q": "文法 G[A]：A→Aab | Ac | d。按消除直接左递归的一般方法改写，新非终结符 A' 的产生式为（　）",
+   "options": [
+    "abA' | cA' | ε",
+    "abA' | cA'",
+    "A'ab | A'c | ε",
+    "ab | c | ε"
+   ],
+   "answer": 0,
+   "analysis": "直接左递归形式 A→Aα|Aβ|γ，其中α=ab，β=c，γ=d；改写为 A→dA'，A'→abA' | cA' | ε，故A'产生式为 abA' | cA' | ε。",
+   "source": "agent 思考出题",
+   "id": "q62"
+  },
+  {
+   "type": "选择",
+   "kp": "LL(1)文法",
+   "qtype": "概念辨析",
+   "q": "文法 G[S]：S→Ab | a，A→a | ε。构造 LL(1) 分析表时，表项 M[S,a] 的情况是（  ）。",
+   "options": [
+    "只能填入 S→Ab",
+    "只能填入 S→a",
+    "可同时填入 S→Ab 和 S→a，故该文法不是 LL(1) 文法",
+    "为空，故该文法不是 LL(1) 文法"
+   ],
+   "answer": 2,
+   "analysis": "SELECT(S→Ab)=FIRST(Ab)={a,b}（因 A→ε），SELECT(S→a)={a}，二者在输入符 a 上冲突，故 M[S,a] 不能唯一确定。易错：忽略 A→ε，误判 SELECT(S→Ab) 只含 a。",
+   "source": "agent 思考出题",
+   "id": "q63"
+  },
+  {
+   "type": "填空",
+   "kp": "FIRST/FOLLOW/SELECT集",
+   "qtype": "计算填空",
+   "q": "文法 G[S]：S→aA | b，A→cB | ε，B→d。则 SELECT(A→ε)=______。（集合元素用逗号分隔，结束符用 #）",
+   "options": [
+    "#"
+   ],
+   "answer": 0,
+   "analysis": "A→ε 的 SELECT 集等于 FOLLOW(A)。A 出现在 S→aA 末尾，故 FOLLOW(A)=FOLLOW(S)={#}，所以 SELECT(A→ε)={#}。易错：误把 c、d 等 FIRST 集元素加入。",
+   "source": "agent 思考出题",
+   "id": "q64"
+  },
+  {
+   "type": "填空",
+   "kp": "左递归",
+   "qtype": "消除左递归",
+   "q": "文法 G[S]：S→Sa | b。按消除直接左递归的一般方法改写后，S' 的产生式为______。",
+   "options": [
+    "S'→aS' | ε"
+   ],
+   "answer": 0,
+   "analysis": "消除 S→Sa|b 的直接左递归得 S→bS'，S'→aS'|ε。易错：漏写 ε 产生式，或把递归部分方向写反。",
+   "source": "agent 思考出题",
+   "id": "q65"
+  },
+  {
+   "type": "选择",
+   "kp": "LL(1)文法",
+   "qtype": "概念判断",
+   "q": "文法 G[S]：S→aA | b，A→bS | ε。关于该文法是否为 LL(1) 文法，下列判断正确的是（  ）。",
+   "options": [
+    "是 LL(1) 文法",
+    "不是，因为 S 的两个产生式 FIRST 集相交",
+    "不是，因为 A 的两个产生式 SELECT 集相交",
+    "不是，因为存在直接左递归"
+   ],
+   "answer": 0,
+   "analysis": "S 两产生式 FIRST 为{a}、{b}，不交；A→bS 的 SELECT={b}，A→ε 的 SELECT=FOLLOW(A)={#}，不交，故是 LL(1)。易错：漏算 ε 产生式用 FOLLOW。",
+   "source": "agent 思考出题",
+   "id": "q66"
+  },
+  {
+   "type": "填空",
+   "kp": "FIRST/FOLLOW/SELECT集",
+   "qtype": "集合计算",
+   "q": "文法 G[S]：S→aA，A→Bb，B→c | ε。则 FOLLOW(B)=______（集合元素用逗号分隔，结束符用#）。",
+   "options": [
+    "b"
+   ],
+   "answer": 0,
+   "analysis": "在 A→Bb 中，B 后紧跟终结符 b，故 b∈FOLLOW(B)；B 后不是串尾，且 b 不可空，不加入 #。易错：误把 FOLLOW(A)={#} 并入。",
+   "source": "agent 思考出题",
+   "id": "q67"
+  },
+  {
+   "type": "选择",
+   "kp": "LL(1)文法",
+   "qtype": "预测分析表",
+   "q": "文法 G[S]：S→aAb，A→c | ε。构造 LL(1) 预测分析表，表项 M[A,b] 应填入（  ）。",
+   "options": [
+    "A→c",
+    "A→ε",
+    "S→aAb",
+    "空白（出错）"
+   ],
+   "answer": 1,
+   "analysis": "A→c 对应输入符 c；A→ε 的 SELECT=FOLLOW(A)={b}，故 M[A,b]=A→ε。易错：把 A→c 填入 b 或误留空。",
+   "source": "agent 思考出题",
+   "id": "q68"
   }
  ]
 }

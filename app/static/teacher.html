@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>编译原理考点地图 · 教师端</title>
-<link rel="stylesheet" href="/static/app.css">
+<link rel="stylesheet" href="/static/app.css?v=1121">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
@@ -41,7 +41,7 @@ table.plain th { background: var(--bg); }
   <div class="brand">
     <span class="logo" style="background:linear-gradient(135deg,#e8590c,#f59f00)">◉</span>
     <div>
-      <h1>教师端 · 编译原理考点地图</h1>
+      <h1 id="pageTitle">教师端 · 编译原理考点地图</h1>
       <p>知识库管理 · 出题作业 · 学情看板 · 基于 <b>中国电信 · 星辰超级智能体 TeleAgent</b> 平台</p>
     </div>
   </div>
@@ -78,7 +78,7 @@ table.plain th { background: var(--bg); }
       <button class="tool-btn" onclick="openView('klass')">🎯 班级学情</button>
     </div>
 
-    <div class="explorer-title">EXPLORER · 编译原理知识库</div>
+    <div class="explorer-title">EXPLORER · <span id="kbTitle">编译原理知识库</span></div>
     <div id="fileTree" class="file-tree"></div>
   </aside>
 
@@ -237,15 +237,6 @@ table.plain th { background: var(--bg); }
           <b>TeleAgent 助教</b>
           <span class="model-chip">教师模式</span>
         </div>
-        <label class="hint-toggle" title="思考等级">
-          <select id="effortSel" style="padding:3px 6px;border:1px solid var(--line);border-radius:6px;font-size:11px">
-            <option value="low">思考·低</option><option value="medium">思考·中</option>
-            <option value="high" selected>思考·高</option>
-          </select>
-        </label>
-        <label class="hint-toggle" title="知识库写权限：关闭后技能只预览不落库">
-          <input type="checkbox" id="kbWrite" checked> 写库
-        </label>
       </div>
       <div class="assist-log" id="chatLog">
         <div class="greet">
@@ -269,9 +260,22 @@ table.plain th { background: var(--bg); }
           <textarea id="chatQ" rows="1" placeholder="提问，或输入 / 触发命令…  (Shift+Enter 换行)"
           onkeydown="onChatKey(event)" oninput="onChatInput(this.value);autoGrow(this)"
           style="resize:none;overflow:hidden"></textarea>
-          <div class="input-foot">
-            <span class="muted" id="cmdHint"></span><span class="muted" id="ctxStats" style="font-size:10.5px;margin-left:auto"></span>
-            <button class="primary" onclick="ask()">发送</button>
+          <div class="composer-foot">
+            <span class="foot-model">✦ <span id="modelChip">TeleChat3-438B</span></span>
+            <label class="foot-effort">Effort:
+              <select id="effortSel">
+                <option value="low">Low</option><option value="medium">Medium</option>
+                <option value="high" selected>High</option>
+              </select>
+            </label>
+            <span class="foot-ctx" id="ctxStats" title="上下文占用"></span>
+            <span class="foot-spacer"></span>
+            <label class="yolo-toggle" title="YOLO：知识库写权限开关——关闭后技能只预览不落库">
+              <input type="checkbox" id="kbWrite" checked>
+              <span class="yolo-slider"></span>
+              <span class="yolo-label">YOLO</span>
+            </label>
+            <button class="send-btn" onclick="ask()" title="发送">➤</button>
           </div>
         </div>
       </div>
@@ -324,7 +328,7 @@ table.plain th { background: var(--bg); }
   </div>
 </div>
 
-<script src="/static/teacher.js"></script>
-<script src="/static/layout.js"></script>
+<script src="/static/teacher.js?v=1121"></script>
+<script src="/static/layout.js?v=1121"></script>
 </body>
 </html>

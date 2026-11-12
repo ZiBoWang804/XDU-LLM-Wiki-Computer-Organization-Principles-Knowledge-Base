@@ -71,6 +71,15 @@ def _user(request: Request, role: str = '') -> dict:
 
 
 @app.middleware('http')
+async def no_cache_html(request: Request, call_next):
+    """HTML 页面不缓存（防浏览器缓存旧版页面）；JS/CSS 靠 ?v= 版本号缓存。"""
+    resp = await call_next(request)
+    if 'text/html' in resp.headers.get('content-type', ''):
+        resp.headers['Cache-Control'] = 'no-cache'
+    return resp
+
+
+@app.middleware('http')
 async def auth_middleware(request: Request, call_next):
     """除 /api/auth/* 与静态页外，所有 /api/* 需携带 X-Token 登录；X-Course-Id 切换课程。"""
     path = request.url.path
@@ -147,8 +156,8 @@ def wiki_file(name: str):
 
 
 @app.get('/api/wiki/search')
-def wiki_search(q: str):
-    return wiki_adapter.search(q)
+def wiki_search(q: str, k: int = 30):
+    return wiki_adapter.search(q, limit=k)
 
 
 @app.get('/api/wiki/related')
@@ -210,6 +219,7 @@ class AskReq(BaseModel):
     context_file: str = ''
     hint_first: bool = True
     temperature: float = 0.3
+    history: list = []   # 多轮对话历史 [{role, content}]
 
 
 @app.post('/api/ask')
@@ -246,7 +256,14 @@ def ask(req: AskReq):
             stu_ctx = '\n\n【学生档案】' + profile.student_profile_text(req.student_id)
         except Exception:
             pass
-    user = '资料：\n%s%s\n\n%s\n\n学生问题：%s' % (wiki_ctx, rag_ctx, stu_ctx, req.question)
+    # 多轮对话历史（连贯回答）
+    hist = ''
+    turns = [m for m in req.history[-10:] if isinstance(m, dict) and m.get('content')]
+    if turns:
+        hist = '\n【对话历史（供连贯回答）】\n' + '\n'.join(
+            '%s：%s' % ('用户' if m.get('role') == 'user' else '助教', str(m['content'])[:500])
+            for m in turns) + '\n'
+    user = '资料：\n%s%s\n%s\n%s\n学生问题：%s' % (wiki_ctx, rag_ctx, stu_ctx, hist, req.question)
     try:
         answer = llm_adapter.chat(system, user, temperature=req.temperature)
     except Exception as exc:

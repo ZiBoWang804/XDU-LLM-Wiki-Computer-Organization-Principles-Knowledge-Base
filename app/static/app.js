@@ -7,6 +7,7 @@ if (!TOKEN) location.href = '/static/login.html';
 const MYNAME = localStorage.getItem('ta_name') || '张三';
 
 const COURSE_ID = localStorage.getItem('ta_course') || 'compiler';
+let COURSE_NAME = '';
 
 async function api(path, opts = {}) {
   opts.headers = { 'X-Token': TOKEN, 'X-Course-Id': COURSE_ID, ...(opts.headers || {}) };
@@ -44,14 +45,33 @@ let vaultPages = [], currentFile = '', histStack = [], histIdx = -1, treeCollaps
 async function loadVault() {
   vaultPages = await api('/api/wiki/pages');
   renderTree(vaultPages);
-  openPage('编译原理知识库.md', true);
+  // 默认打开课程首页：索引页 > 根目录 md > 任意 md；空库给出提示（不做搜索兜底）
+  const home = vaultPages.find(p => p.type === '索引页' && p.file.endsWith('.md'))
+    || vaultPages.find(p => p.file.endsWith('.md') && !p.file.includes('/'))
+    || vaultPages.find(p => p.file.endsWith('.md'));
+  if (home) {
+    openPage(home.file, true);
+  } else {
+    document.getElementById('crumb').textContent = (COURSE_NAME || '知识库');
+    document.getElementById('mdView').innerHTML =
+      '<p class="muted">该课程知识库暂无内容——可在教师端用「导入资料 → 提取知识点」构建。</p>';
+  }
+}
+
+// 刷新文件树（skill 产生新记录后即时可见）
+async function refreshTree() {
+  try {
+    vaultPages = await api('/api/wiki/pages');
+    renderTree(vaultPages);
+  } catch (e) { }
 }
 
 function renderTree(pages) {
-  const order = ['知识点页', '专题页', '题库页', '题解页', '试卷页', '智能体记录', '索引页'];
+  const order = ['知识点页', '专题页', '题库页', '题解页', '试卷页', '智能体记录', '索引页', '文档附件', '其他'];
   const groups = {};
   pages.forEach(p => { (groups[p.type || '其他'] = groups[p.type || '其他'] || []).push(p); });
-  document.getElementById('fileTree').innerHTML = order.filter(t => groups[t]).map(t => {
+  const keys = order.filter(t => groups[t]).concat(Object.keys(groups).filter(t => !order.includes(t)));
+  document.getElementById('fileTree').innerHTML = keys.map(t => {
     const open = !treeCollapsed[t];
     return `<div class="tree-group">
       <div class="tree-folder" onclick="toggleFolder('${t}')">
@@ -82,7 +102,7 @@ function resolveWikiTarget(raw) {
       (p.knowledge_points || []).some(k => target.includes(k) || k.includes(target)));
     if (p) hit = p.file.replace(/\.md$/, '');
   }
-  return hit ? { file: hit + '.md', anchor } : null;
+  return hit ? { file: hit + (/\.pdf$/i.test(hit) ? '' : '.md'), anchor } : null;
 }
 
 async function openPage(file, pushHist = true) {
@@ -147,6 +167,19 @@ function renderMarkdown(page, anchor = '') {
   });
   const view = document.getElementById('mdView');
   view.innerHTML = marked.parse(body);
+  // 行内代码中的文件路径（如 原始资料/xxx.md）→ 可点击打开
+  view.querySelectorAll('code').forEach(c => {
+    const t = c.textContent.trim();
+    const hit = vaultPages.find(p => p.file === t || p.file === t + '.md');
+    if (hit && !c.closest('a')) {
+      const a = document.createElement('a');
+      a.className = 'wikilink';
+      a.title = hit.file;
+      a.textContent = t;
+      a.onclick = () => openPage(hit.file);
+      c.replaceWith(a);
+    }
+  });
   view.querySelectorAll('blockquote').forEach(bq => {
     const first = bq.querySelector('p');
     if (first && /\[!.*?\]/.test(first.textContent)) {
@@ -191,11 +224,16 @@ function smartLookup(q) {
   if (!q.trim()) { document.getElementById('lookupResults').innerHTML = ''; return; }
   lookupTimer = setTimeout(async () => {
     const hits = await api('/api/wiki/search?q=' + encodeURIComponent(q));
-    document.getElementById('lookupResults').innerHTML = hits.map(h => `
+    const maxS = Math.max(...hits.map(x => x.score || 0), 1);
+    document.getElementById('lookupResults').innerHTML = hits.map(h => {
+      const rel = Math.round((h.score || 0) / maxS * 100);
+      return `
       <div class="lookup-item" onclick="lookupJump('${h.file}','${q.replace(/'/g, '')}','${(h.anchor||'').replace(/'/g, '')}')">
-        <div class="lk-file">${h.file.replace(/\.md$/, '')} <span class="muted">${h.chapter}</span></div>
+        <div class="lk-file">${h.file.replace(/\.md$/, '')} <span class="muted">${h.chapter}</span>
+          <span class="lk-rel${rel < 45 ? ' low' : ''}" title="关联度">${rel}%</span></div>
         <div class="lk-ex">${h.excerpt.replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), m => '<mark>' + m + '</mark>')}</div>
-      </div>`).join('') || '<p class="muted">无匹配</p>';
+      </div>`;
+    }).join('') || '<p class="muted">无匹配</p>';
   }, 220);
 }
 
@@ -360,6 +398,9 @@ async function runTool(name) {
   toast('已打开：' + label);
 }
 
+// 多轮对话历史（随 /api/ask 一起发模型，跨会话各自维护）
+let chatHistory = [];
+
 async function ask() {
   const input = document.getElementById('chatQ');
   let q = input.value.trim();
@@ -392,13 +433,18 @@ async function ask() {
   const greet = log.querySelector('.greet');
   if (greet) greet.remove();
   const ctxFile = document.getElementById('ctxChip').dataset.file || '';
+  const sendHistory = chatHistory.slice(-10);
   pushMsg('user', q);
+  chatHistory.push({ role: 'user', content: q.slice(0, 600) });
   const thinking = pushMsg('bot', `<span class="ta-tag">TeleAgent</span><br>检索知识库中…`);
   try {
     const r = await post('/api/ask', {
       question: q, student_id: SID, context_file: ctxFile,
       hint_first: document.getElementById('hintFirst').checked,
+      history: sendHistory,
     });
+    chatHistory.push({ role: 'assistant', content: (r.answer || '').replace(/<[^>]+>/g, ' ').slice(0, 600) });
+    updateCtxStats();
     const srcs = (r.sources || []).map(s =>
       `${s.file || s.document_name || ''}${s.chapter ? '（' + s.chapter + '）' : ''}`).join('；');
     thinking.innerHTML = `<span class="ta-tag">TeleAgent</span><br><div class="md-out">${marked.parse(r.answer || '')}</div>
@@ -421,6 +467,41 @@ function hashCode(s) {
   return h;
 }
 registerStudent();
+updateCtxStats();
+
+// ================= 新手引导（首次进入 · ChatGPT 式欢迎卡） =================
+function showOnboarding() {
+  const log = document.getElementById('chatLog');
+  if (!log) return;
+  const acts = [
+    ['🗺', '看考点地图', '章节 → 知识点 → 考点三级图谱', "openView('graph')"],
+    ['✏️', '开始自测刷题', 'AI 结合你的学情出全新题', "openView('quiz');startQuiz()"],
+    ['🎯', '诊断薄弱点', '错因四分类 · 对症训练', "openView('diag');loadWeakness()"],
+    ['📅', '生成复习计划', '按考试倒计时逐天拆解', "openView('plan')"],
+    ['🔁', '变式训练', '原题换情境，举一反三', "openView('variant');fillKpSelect()"],
+    ['💬', '问 TeleAgent 助教', '输入 / 调技能 · @文档 引用', "document.getElementById('chatQ').focus()"],
+  ];
+  log.innerHTML = `<div class="onboard-wrap">
+    <div class="onboard-hi">TELEAGENT · 编译原理考点地图</div>
+    <div class="onboard-title">你好，${MYNAME} 👋</div>
+    <div class="onboard-sub">我是你的课程复习智能体。可以从这几件事开始——</div>
+    <div class="onboard-grid">
+      ${acts.map(([ic, t, d, fn]) => `
+        <div class="onboard-item" onclick="${fn}">
+          <div class="oi-ic">${ic}</div>
+          <div><b>${t}</b><p>${d}</p></div>
+        </div>`).join('')}
+    </div>
+    <div class="onboard-tip">
+      <b>/</b> 唤起技能面板　<b>@文档名</b> 切换关联资料　选中文字可<b>引用到对话</b><br>
+      答错的题自动进错题本 · 越练越懂你
+    </div>
+  </div>`;
+}
+if (!localStorage.getItem('ta_onboard_student')) {
+  localStorage.setItem('ta_onboard_student', '1');
+  showOnboarding();
+}
 
 // ================= 考点图谱 =================
 let graphDrawn = false;
@@ -600,6 +681,7 @@ async function loadSkillChips() {
 
 // ---------- / 命令面板 + @ 文档选择器（Claudian 式） ----------
 function onChatInput(val) {
+  updateCtxStats();
   const menu = document.getElementById('cmdMenu');
   if (val.startsWith('/')) {
     const q = val.slice(1).toLowerCase().split(' ')[0];
@@ -714,7 +796,7 @@ let quizList = [], quizIdx = 0, quizRight = 0;
 
 async function startQuiz() {
   const area = document.getElementById('quizArea');
-  if (area) area.innerHTML = '<p class="muted">🧠 TeleAgent 正在结合你的学情命制全新题目…（约 20-60 秒）</p>';
+  if (area) area.innerHTML = '<p class="muted">🧠 TeleAgent 正在结合你的学情命制全新题目…</p>';
   try {
     quizList = await api('/api/quiz/questions?limit=10&student_id=' + SID);
   } catch (e) {
@@ -805,7 +887,7 @@ document.getElementById('examDate').value =
 async function genPlan() {
   const exam_date = document.getElementById('examDate').value;
   const el = document.getElementById('planArea');
-  el.innerHTML = '<p class="muted">🧠 TeleAgent 正在结合学情与能力轨迹规划复习路径…（约 20-60 秒）</p>';
+  el.innerHTML = '<p class="muted">🧠 TeleAgent 正在结合学情与能力轨迹规划复习路径…</p>';
   try {
     const r = await post('/api/plan/generate', { student_id: SID, exam_date });
     genPlanTo(el, r);
@@ -926,7 +1008,7 @@ api('/api/config/status').then(c => {
   if (chip) chip.textContent = c.llm_model + (c.llm_configured ? '' : '（未配Key）');
 }).catch(() => { });
 
-loadVault();
+loadCourseBar().finally(() => loadVault());
 loadSkillChips();
 
 
@@ -944,9 +1026,22 @@ async function loadCourseBar() {
     if (!bar) return;
     bar.innerHTML = courses.map(c =>
       `<option value="${c.id}" ${c.id === COURSE_ID ? 'selected' : ''}>${c.name}</option>`).join('');
+    COURSE_NAME = (courses.find(c => c.id === COURSE_ID) || {}).name || '';
+    applyCourseLabels();
   } catch (e) { }
 }
-loadCourseBar();
+
+// 课程名相关界面文案（切课后不残留旧课程名）
+function applyCourseLabels() {
+  const n = COURSE_NAME || '知识库';
+  const kb = document.getElementById('kbTitle');
+  if (kb) kb.textContent = n + '知识库';
+  const h1 = document.getElementById('pageTitle');
+  if (h1) h1.textContent = n + '考点地图';
+  document.title = n + '考点地图 · TeleAgent 课程智能体';
+  const oh = document.querySelector('.onboard-hi');
+  if (oh) oh.textContent = 'TELEAGENT · ' + n + '考点地图';
+}
 
 
 // ================= 快速搜索弹窗（Obsidian 式 Quick Search） =================
@@ -974,7 +1069,7 @@ function doSearch(q) {
     return;
   }
   window.__srTimer = setTimeout(async () => {
-    const hits = await api('/api/wiki/search?q=' + encodeURIComponent(q) + '&k=8');
+    const hits = await api('/api/wiki/search?q=' + encodeURIComponent(q) + '&k=12');
     srHits = hits; srIdx = 0;
     renderSearchResults(q);
   }, 200);
@@ -993,9 +1088,12 @@ function renderSearchResults(q) {
         m => '<mark>' + m + '</mark>');
       return '<div class="sr-snip">- ' + hl + '</div>';
     }).join('');
+    const maxS = Math.max(...srHits.map(x => x.score || 0), 1);
+    const rel = Math.round((h.score || 0) / maxS * 100);
     return `<div class="sr-item ${i === 0 ? 'sel' : ''}" data-i="${i}" onclick="pickSearch(${i})">
       <div class="sr-head">
         <span class="sr-name">${h.file.replace(/\.md$/, '').split('/').pop()}</span>
+        <span class="sr-rel${rel < 45 ? ' low' : ''}" title="关联度">${rel}%</span>
         <span class="sr-count">${h.match_count || 1} matches · ${h.chapter || ''}</span>
       </div>
       <div class="sr-snips">${snips}</div>
@@ -1044,18 +1142,27 @@ document.addEventListener('keydown', e => {
 });
 
 
-// 上下文统计条（Claudian 式：词数/字符数实时显示）
+// 上下文占用（Claudian 式：环形进度 + 百分比，会话+文档+引用+输入 ≈ 模型上下文窗口）
 function updateCtxStats() {
   const el = document.getElementById('ctxStats');
   if (!el) return;
   const chip = document.getElementById('ctxChip');
   const file = (chip && chip.dataset.file) || '';
-  const quote = typeof quotedText !== 'undefined' ? quotedText : '';
+  let quote = '';
+  try { quote = quotedText || ''; } catch (e) { }   // quotedText 声明在后，防 TDZ
   const q = (document.getElementById('chatQ') || {}).value || '';
-  const chars = quote.length + q.length;
-  const words = (quote + ' ' + q).split(/\s+/).filter(Boolean).length + (file ? 2 : 0);
-  const fname = file ? file.replace(/\.md$/, '').split('/').pop() + ' · ' : '';
-  el.textContent = fname + words + ' 词 ' + chars + ' 字符';
+  const histChars = chatHistory.reduce((n, m) => n + (m.content || '').length, 0);
+  const chars = histChars + quote.length + q.length + (file ? 1500 : 0);
+  const pct = Math.min(chars / 2 / 128000 * 100, 100);   // 粗估 token（字符/2）占 128K 窗口
+  const pctStr = pct < 10 ? pct.toFixed(1) : String(Math.round(pct));
+  const r = 6, c = 2 * Math.PI * r;
+  const off = c * (1 - pct / 100);
+  el.innerHTML = `<svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true">
+      <circle cx="8" cy="8" r="${r}" fill="none" stroke="var(--line)" stroke-width="2.2"></circle>
+      <circle cx="8" cy="8" r="${r}" fill="none" stroke="#d97757" stroke-width="2.2"
+        stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"
+        transform="rotate(-90 8 8)"></circle>
+    </svg><span>${pctStr}%</span>`;
 }
 
 
@@ -1155,6 +1262,7 @@ function saveSessions() {
 function newSession(silent) {
   sessions.push({ id: Date.now(), title: '新会话', time: new Date().toLocaleString('zh-CN', { hour12: false }), msgs: [] });
   curSess = sessions.length - 1;
+  chatHistory = [];
   saveSessions();
   if (!silent) {
     const log = document.getElementById('chatLog');
@@ -1169,6 +1277,11 @@ function switchSession(i) {
   const log = document.getElementById('chatLog');
   const s = sessions[i];
   if (!log || !s) return;
+  chatHistory = s.msgs.map(m => ({
+    role: m.cls === 'user' ? 'user' : 'assistant',
+    content: String(m.html || '').replace(/<[^>]+>/g, ' ').slice(0, 600),
+  })).filter(m => m.content.trim());
+  updateCtxStats();
   log.innerHTML = s.msgs.map(m => '<div class="msg ' + m.cls + '">' + m.html + '</div>').join('')
     || '<div class="greet"><div class="greet-title">TeleAgent</div><div class="greet-sub">Good day</div><div class="linked-chip" id="linkedChip">🔗 Linked content: 知识库</div></div>';
   document.querySelectorAll('.sess-item').forEach((el, j) => el.classList.toggle('sel', j === i));
@@ -1341,6 +1454,7 @@ setTimeout(() => {
     head.appendChild(pop);
     loadSessions();
     renderSessions();
+    updateCtxStats();
   }
 }, 150);
 
