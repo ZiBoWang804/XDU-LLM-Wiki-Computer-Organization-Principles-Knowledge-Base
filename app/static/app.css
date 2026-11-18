@@ -311,6 +311,37 @@ mark.hl-active { background: #ffb84d; outline: 2px solid var(--must); }
 }
 .send-btn:hover { filter: brightness(1.08); transform: scale(1.06); }
 
+
+/* 拖拽/粘贴上传高亮 */
+.assist { position: relative; }
+.assist.drag-over .input-card {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.assist.drag-over::after {
+  content: '松开以上传附件 📎';
+  position: absolute; inset: 0; z-index: 95;
+  display: grid; place-items: center;
+  background: color-mix(in srgb, var(--accent-soft) 82%, transparent);
+  font-size: 15px; font-weight: 700; color: var(--accent-2);
+  pointer-events: none;
+}
+
+/* ===== 多模态附件（composer） ===== */
+.attach-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 6px; }
+.attach-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--accent-soft); color: var(--accent-2);
+  border-radius: 999px; padding: 3px 10px; font-size: 11px;
+}
+.attach-chip button {
+  border: none; background: none; cursor: pointer; color: var(--muted);
+  font-size: 13px; padding: 0 2px; line-height: 1;
+}
+.attach-chip button:hover { color: var(--bad); }
+.attach-btn { padding: 5px 9px; border-radius: 50%; border: none; background: none; cursor: pointer; font-size: 15px; }
+.attach-btn:hover { background: var(--accent-soft); }
+
 /* ===== 新手引导（首次进入 · ChatGPT 式欢迎卡） ===== */
 .onboard-wrap { max-width: 580px; margin: 7vh auto 0; text-align: center; padding: 0 14px; }
 .onboard-hi {
@@ -393,6 +424,75 @@ mark.hl-active { background: #ffb84d; outline: 2px solid var(--must); }
 .related-item .r-meta { color: var(--muted); margin-top: 2px; }
 .r-bar { height: 4px; background: var(--accent-soft); border-radius: 99px; margin-top: 5px; }
 .r-bar i { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
+/* 关联条目：点击展开内容预览 */
+.rel-head { cursor: pointer; }
+.rel-head:hover .r-file { color: var(--accent); }
+.rel-caret { float: right; color: var(--muted); font-size: 11px; }
+.rel-open { color: var(--accent); margin-left: 8px; cursor: pointer; font-size: 11px; }
+.rel-body {
+  margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line);
+  max-height: 240px; overflow-y: auto; font-size: 12px; line-height: 1.7;
+  color: var(--muted);
+}
+.rel-content h1, .rel-content h2, .rel-content h3 { font-size: 12.5px; margin: 6px 0 3px; color: var(--fg); }
+.rel-content table { font-size: 11px; }
+/* 工具执行轨迹（harness 透明化） */
+.trace-box {
+  margin: 8px 0; border: 1px dashed var(--line); border-radius: 9px;
+  padding: 6px 10px; font-size: 11px; color: var(--muted);
+}
+.trace-box summary { cursor: pointer; font-weight: 600; }
+.trace-line { margin: 4px 0; word-break: break-all; }
+
+/* 自测整卷：逐题自评条 + 作业卡片展开 */
+.selftest-mark { display: flex; gap: 8px; margin: 2px 0 14px; }
+.selftest-mark button { padding: 5px 12px; font-size: 11.5px; }
+.hw-card { cursor: pointer; }
+.hw-card:hover { border-color: var(--accent); }
+.hw-detail { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); }
+
+
+/* 上下文面板（Claudian 式） */
+.composer-foot { position: relative; }
+.foot-ctx { cursor: pointer; }
+.ctx-tokens { font-variant-numeric: tabular-nums; }
+.ctx-pop {
+  display: none; position: absolute; bottom: calc(100% + 8px); left: 0;
+  width: 262px; background: var(--card); border: 1px solid var(--line);
+  border-radius: 12px; padding: 12px 14px; z-index: 80;
+  box-shadow: 0 12px 32px rgba(30, 30, 80, .18);
+}
+.ctx-pop.show { display: block; }
+.ctx-pop-head { font-size: 11px; color: var(--muted); margin-bottom: 7px; }
+.ctx-pop-head b { color: var(--ink); }
+.ctx-bar { height: 6px; border-radius: 99px; background: var(--accent-soft); overflow: hidden; margin-bottom: 9px; }
+.ctx-bar i { display: block; height: 100%; background: #d97757; border-radius: 99px; }
+.ctx-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); padding: 2.5px 0; }
+.ctx-row b { color: var(--ink); font-weight: 600; }
+
+
+/* 会话面板（Claudian 式） */
+.sess-bar { display: flex; gap: 6px; margin-bottom: 6px; }
+.sess-tool {
+  border: 1px solid var(--line); background: var(--bg); border-radius: 8px;
+  padding: 6px 10px; cursor: pointer; font-size: 12px;
+}
+.sess-tool:hover { border-color: var(--accent); }
+.sess-search {
+  width: 100%; box-sizing: border-box; padding: 6px 10px; margin-bottom: 6px;
+  border: 1px solid var(--line); border-radius: 8px; font-size: 12px;
+}
+.sess-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 1.2px; color: var(--muted);
+  margin: 8px 2px 4px;
+}
+.sess-acts { display: inline-flex; gap: 3px; margin-left: auto; }
+.sess-act {
+  border: none; background: none; cursor: pointer; font-size: 12px;
+  padding: 2px 4px; border-radius: 6px; opacity: .55;
+}
+.sess-act:hover { opacity: 1; background: var(--accent-soft); }
+
 
 /* ===== 通用 ===== */
 h2 { margin: 0 0 4px; font-size: 18px; }

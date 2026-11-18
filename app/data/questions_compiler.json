@@ -1003,6 +1003,513 @@
    "analysis": "A→c 对应输入符 c；A→ε 的 SELECT=FOLLOW(A)={b}，故 M[A,b]=A→ε。易错：把 A→c 填入 b 或误留空。",
    "source": "agent 思考出题",
    "id": "q68"
+  },
+  {
+   "type": "选择",
+   "kp": "推导与归约",
+   "qtype": "选择",
+   "q": "最右推导（规范推导）的逆过程称为（　）。",
+   "options": [
+    "最左归约",
+    "最右归约",
+    "规范归约",
+    "移进归约"
+   ],
+   "answer": 2,
+   "analysis": "最右推导又称规范推导，其逆过程是规范归约；最左推导的逆过程才是最左归约。易错点是按字面误选“最右归约”，规范归约才是标准术语。",
+   "source": "agent 思考出题",
+   "id": "q69"
+  },
+  {
+   "type": "选择",
+   "kp": "推导与归约",
+   "qtype": "选择题",
+   "q": "文法 G[E]：E→E+T|T，T→T*F|F，F→id。对句子 id+id*id 进行规范归约，第一步归约使用的产生式是（　）。",
+   "options": [
+    "F→id",
+    "E→E+T",
+    "T→T*F",
+    "T→F"
+   ],
+   "answer": 0,
+   "analysis": "规范归约是最右推导的逆过程，故归约第一步对应最右推导最后一步。最右推导最后一步 F⇒id，因此第一步归约为 id+id*id⇒F+id*id，使用 F→id。易错点：误把推导第一步 E→E+T 当作归约第一步。",
+   "source": "agent 思考出题",
+   "id": "q70"
+  },
+  {
+   "type": "选择",
+   "kp": "文法转语言",
+   "qtype": "求语言",
+   "q": "给定文法 G[S]：S → aSb | aS | ε，则 L(G) 是（　）。",
+   "options": [
+    "{a^m b^n | m≥n≥0}",
+    "{a^m b^n | m>n≥0}",
+    "{a^n b^n | n≥0}",
+    "{a^m b^n | n≥m≥0}"
+   ],
+   "answer": 0,
+   "source": "依据专题3“文法→语言”的推导与配对思想，仿教材第2章习题改编",
+   "analysis": "由 S→aSb 每使用一次就在两侧各增加一个 a 和一个 b，由 S→aS 只增加一个 a，由 S→ε 结束。因此若 aSb 使用 n 次、aS 使用 k 次，则得到 a^{n+k}b^n，即 a 的个数 m=n+k、b 的个数 n，满足 m≥n≥0；当 n=k=0 时得到 ε。反之任意 m≥n≥0 都可用 n 次 aSb 和 m-n 次 aS 生成。易错点：忽略 ε 会误认为 m>n；只看 aSb 会误判为 a^n b^n。",
+   "id": "q71"
+  },
+  {
+   "type": "选择",
+   "kp": "FIRSTVT/LASTVT",
+   "qtype": "概念理解",
+   "q": "算符优先分析中，非终结符 \\(A\\) 的 \\(\\mathrm{FIRSTVT}(A)\\) 集合包含的是（　）。",
+   "options": [
+    "所有可能作为 \\(A\\) 推导出的句柄首终结符的终结符",
+    "可能出现在由 \\(A\\) 推导出的句型最左端的终结符，以及形如 \\(Ba\\) 中紧跟最左非终结符的终结符 \\(a\\)",
+    "可能出现在由 \\(A\\) 推导出的句型最右端的终结符，以及形如 \\(aB\\) 中紧挨最左终结符的非终结符",
+    "\\(A\\) 的所有产生式右部中出现的终结符"
+   ],
+   "answer": 1,
+   "analysis": "FIRSTVT(A) 收集 A 推导出的最左终结符，以及最左非终结符后紧跟的终结符；第三个选项描述的是 LASTVT，第四个范围过宽。",
+   "source": "agent 思考出题",
+   "id": "q72"
+  },
+  {
+   "type": "填空",
+   "kp": "FIRSTVT/LASTVT",
+   "qtype": "集合计算",
+   "q": "文法 \\(G[E]\\)：\\(E\\to E+T \\mid T\\)，\\(T\\to T*F \\mid F\\)，\\(F\\to (E) \\mid i\\)。则 \\(\\mathrm{FIRSTVT}(T)=\\)______（集合元素按星号、左括号、i 的顺序填写，用逗号分隔）。",
+   "options": [
+    "{*, (, i}"
+   ],
+   "answer": 0,
+   "analysis": "由 T→T*F 知 * 属于 FIRSTVT(T)；由 T→F 及 F→(E)|i 知 (、i 属于 FIRSTVT(T)。故为 {*, (, i}。易错点：漏掉紧跟最左非终结符的 *。",
+   "source": "agent 思考出题",
+   "id": "q73"
+  },
+  {
+   "type": "选择",
+   "kp": "最左素短语",
+   "qtype": "识别应用",
+   "q": "文法 \\(G[E]\\)：\\(E\\to E+T \\mid T\\)，\\(T\\to T*F \\mid F\\)，\\(F\\to i\\)。句型 \\(i+i*i\\) 的最左素短语是（　）。",
+   "options": [
+    "第一个 i",
+    "i+i",
+    "i*i",
+    "i+i*i"
+   ],
+   "answer": 0,
+   "analysis": "最左素短语是含终结符且不含更小素短语的短语。第一个 i 由 F→i 归约，是最左素短语；i*i 是素短语但非最左，i+i 不是短语。易错：把整个句型当素短语。",
+   "source": "agent 思考出题",
+   "id": "q74"
+  },
+  {
+   "type": "选择",
+   "kp": "推导与归约",
+   "qtype": "最左推导",
+   "q": "文法 \\(G[S]\\)：\\(S\\to aB \\mid b\\)，\\(B\\to bS \\mid \\varepsilon\\)。句子 \\(abb\\) 的最左推导中，第二步使用的产生式是（　）。",
+   "options": [
+    "\\(S\\to aB\\)",
+    "\\(B\\to bS\\)",
+    "\\(S\\to b\\)",
+    "\\(B\\to \\varepsilon\\)"
+   ],
+   "answer": 1,
+   "analysis": "最左推导：S⇒aB⇒abS⇒abb。第二步替换最左非终结符 B，使用 B→bS。易错：跳过 B 先用 S→b，那不是最左推导。",
+   "source": "agent 思考出题",
+   "id": "q75"
+  },
+  {
+   "type": "选择",
+   "kp": "SLR(1)分析表",
+   "qtype": "概念理解",
+   "q": "构造 SLR(1) 分析表时，为确定归约项目 \\(A\\to\\alpha\\) 应在哪些输入符列填入归约动作，通常使用（　）。",
+   "options": [
+    "\\(\\mathrm{FOLLOW}(A)\\)",
+    "\\(\\mathrm{FIRST}(A)\\)",
+    "\\(\\mathrm{FIRSTVT}(A)\\)",
+    "\\(\\mathrm{SELECT}(A\\to\\alpha)\\)"
+   ],
+   "answer": 0,
+   "analysis": "SLR(1) 在 LR(0) 项目集基础上，用 FOLLOW(A) 限定归约：当前输入符属于 FOLLOW(A) 时填 r_j。易错：与 LL(1) 的 SELECT/FIRST 混淆。",
+   "source": "agent 思考出题",
+   "id": "q76"
+  },
+  {
+   "type": "选择",
+   "kp": "FIRSTVT/LASTVT",
+   "qtype": "计算题",
+   "q": "文法 \\(G[S]\\)：\\(S\\to A b \\mid c\\)，\\(A\\to S a \\mid d\\)。则 \\(\\mathrm{FIRSTVT}(A)=\\)（　）。",
+   "options": [
+    "{a,d}",
+    "{a,b,c,d}",
+    "{a,b,d}",
+    "{a,c,d}"
+   ],
+   "answer": 1,
+   "analysis": "由 A→d 得 d，A→S a 得 a 并并入 FIRSTVT(S)；由 S→A b 得 b，S→c 得 c，且 S 与 A 的 FIRSTVT 互相传递，最终为 {a,b,c,d}。易错点是漏掉相互传递。",
+   "source": "agent 思考出题",
+   "id": "q77"
+  },
+  {
+   "type": "填空",
+   "kp": "FIRSTVT/LASTVT",
+   "qtype": "计算题",
+   "q": "文法 \\(G[S]\\)：\\(S\\to A b \\mid c\\)，\\(A\\to S a \\mid d\\)。则 \\(\\mathrm{LASTVT}(A)=\\)______。",
+   "options": [
+    "{a,d}"
+   ],
+   "answer": 0,
+   "analysis": "A→S a 的右部末尾是终结符 a，故 a∈LASTVT(A)；A→d 得 d。因右部末尾不是非终结符，不再并入 LASTVT(S)，所以为 {a,d}。易错点是误并入 LASTVT(S)。",
+   "source": "agent 思考出题",
+   "id": "q78"
+  },
+  {
+   "type": "选择",
+   "kp": "最左素短语",
+   "qtype": "识别题",
+   "q": "算符优先文法 \\(G[S]\\)：\\(S\\to a S b \\mid c\\)。句型 \\(a a c b b\\) 的最左素短语是（　）。",
+   "options": [
+    "\\(c\\)",
+    "\\(a c b\\)",
+    "\\(a a c b b\\)",
+    "\\(a a c\\)"
+   ],
+   "answer": 0,
+   "analysis": "该句型由 S⇒aSb⇒aaSbb⇒aacbb 得到。c 是第一个可归约的素短语；acb 虽为短语，但含更小素短语 c。易错点是把句柄或最大短语当作最左素短语。",
+   "source": "agent 思考出题",
+   "id": "q79"
+  },
+  {
+   "type": "选择",
+   "kp": "FIRSTVT/LASTVT",
+   "qtype": "判断题",
+   "q": "在算符优先分析中，当栈顶终结符为 \\(a\\)、当前输入符为 \\(b\\)，且优先关系为 \\(a \\lessdot b\\) 时，通常执行的动作是（　）。",
+   "options": [
+    "移进 \\(b\\)",
+    "按产生式归约",
+    "接受",
+    "报错"
+   ],
+   "answer": 0,
+   "analysis": "\\(a \\lessdot b\\) 表示 b 的优先级高于 a，应先移进 b；当归约关系为 \\(a \\gtrdot b\\) 时才归约。易错点是混淆 \\(\\lessdot\\) 与 \\(\\gtrdot\\) 对应的动作。",
+   "source": "agent 思考出题",
+   "id": "q80"
+  },
+  {
+   "type": "填空",
+   "kp": "最左素短语",
+   "qtype": "概念题",
+   "q": "素短语是至少含有______个终结符的短语，且除自身外不含更小的素短语。",
+   "options": [
+    "一"
+   ],
+   "answer": 0,
+   "analysis": "素短语必须至少含一个终结符，并排除内部含更小素短语的短语；最左素短语是最左边的素短语。易错点是将素短语与句柄、直接短语混淆。",
+   "source": "agent 思考出题",
+   "id": "q81"
+  },
+  {
+   "type": "选择",
+   "kp": "FIRSTVT/LASTVT",
+   "qtype": "计算题",
+   "q": "文法 \\(G[S]\\)：\\(S\\to A a\\mid b\\)，\\(A\\to B c\\mid d\\)，\\(B\\to e\\)。则 \\(\\mathrm{LASTVT}(A)=\\)（　）。",
+   "options": [
+    "\\(\\{c,d\\}\\)",
+    "\\(\\{e,c,d\\}\\)",
+    "\\(\\{d\\}\\)",
+    "\\(\\{c\\}\\)"
+   ],
+   "answer": 0,
+   "analysis": "LASTVT 收集可作最右终结符的终结符。A→Bc 的最右终结符为 c，不并入 LASTVT(B)；A→d 得 d，故为 {c,d}。易错：把 B 的 e 并入。",
+   "source": "agent 思考出题",
+   "id": "q82"
+  },
+  {
+   "type": "填空",
+   "kp": "FIRSTVT/LASTVT",
+   "qtype": "计算题",
+   "q": "文法 \\(G[S]\\)：\\(S\\to A b\\mid c\\)，\\(A\\to a B\\mid d\\)，\\(B\\to e\\mid f\\)。则 \\(\\mathrm{FIRSTVT}(S)=\\)______（集合元素用逗号分隔）。",
+   "options": [
+    "\\(\\{a,b,c,d\\}\\)"
+   ],
+   "answer": 0,
+   "analysis": "B 的 FIRSTVT={e,f}，但 A→aB 首位已是 a，故 B 不进入 A。A 的 FIRSTVT={a,d}；S→Ab 并入 {a,d} 并加 b，S→c 加 c，得 {a,b,c,d}。",
+   "source": "agent 思考出题",
+   "id": "q83"
+  },
+  {
+   "type": "选择",
+   "kp": "最左素短语",
+   "qtype": "计算题",
+   "q": "文法 \\(G[S]\\)：\\(S\\to S a T\\mid T\\)，\\(T\\to T b\\mid c\\)。句子 \\(c b a c\\) 的最左素短语是（　）。",
+   "options": [
+    "\\(c\\)",
+    "\\(c b\\)",
+    "\\(b a c\\)",
+    "\\(c b a c\\)"
+   ],
+   "answer": 0,
+   "analysis": "单终结符 c 由 T→c 形成，是最左素短语；c b 含更小素短语 c，故不是素短语，全句也不是。易错：误把直接短语 c b 当作最左素短语。",
+   "source": "agent 思考出题",
+   "id": "q84"
+  },
+  {
+   "type": "选择",
+   "kp": "SLR(1)分析表",
+   "qtype": "概念题",
+   "q": "构造 SLR(1) 分析表时，若某状态含归约项目 \\(A\\to\\alpha\\cdot\\) 和移进项目 \\(B\\to\\beta\\cdot a\\gamma\\)，且 \\(a\\in \\mathrm{FOLLOW}(A)\\)，则在该状态的输入符 \\(a\\) 列会出现（　）。",
+   "options": [
+    "移进-归约冲突",
+    "归约-归约冲突",
+    "无冲突",
+    "只能接受"
+   ],
+   "answer": 0,
+   "analysis": "该列既要按 B→β·aγ 移进 a，又要按 A→α· 归约（因 a∈FOLLOW(A)），故产生移进-归约冲突。易错：与两个归约项目造成的归约-归约冲突混淆。",
+   "source": "agent 思考出题",
+   "id": "q85"
+  },
+  {
+   "type": "选择",
+   "kp": "语法树与二义性",
+   "qtype": "概念/计算",
+   "q": "文法 \\(G[S]\\)：\\(S\\to S S\\mid a\\)。句子 \\(a a a\\) 的不同语法树棵数为（　）。",
+   "options": [
+    "1",
+    "2",
+    "3",
+    "无穷多"
+   ],
+   "answer": 1,
+   "analysis": "两种结合方式：S⇒SS，可分成左结合 (aa)a 与右结合 a(aa)，对应两棵语法树；三个 a 只有这两种二叉树结构。易错：把不同推导步序误当成不同语法树。",
+   "source": "agent 思考出题",
+   "id": "q86"
+  },
+  {
+   "type": "选择",
+   "kp": "FIRSTVT/LASTVT",
+   "qtype": "概念判断",
+   "q": "文法中若有产生式 \\(A\\to B a\\gamma\\)（其中 \\(a\\) 为终结符），则根据 \\(\\mathrm{FIRSTVT}\\) 的构造规则，下列元素中一定加入 \\(\\mathrm{FIRSTVT}(A)\\) 的是（　）。",
+   "options": [
+    "\\(\\varepsilon\\)",
+    "\\(a\\)",
+    "\\(\\mathrm{FOLLOW}(B)\\)",
+    "\\(\\mathrm{LASTVT}(A)\\)"
+   ],
+   "answer": 1,
+   "analysis": "规则：形如 \\(A\\to B a\\gamma\\) 时，\\(a\\in\\mathrm{FIRSTVT}(A)\\)，且 \\(\\mathrm{FIRSTVT}(B)\\subseteq\\mathrm{FIRSTVT}(A)\\)。误选 FOLLOW/LASTVT 是把集合作用混淆。",
+   "source": "agent 思考出题",
+   "id": "q87"
+  },
+  {
+   "type": "选择",
+   "kp": "FIRSTVT/LASTVT",
+   "qtype": "概念判断",
+   "q": "若有产生式 \\(A\\to \\alpha a B\\)（其中 \\(a\\) 为终结符），则根据 \\(\\mathrm{LASTVT}\\) 的构造规则，下列元素中一定加入 \\(\\mathrm{LASTVT}(A)\\) 的是（　）。",
+   "options": [
+    "\\(a\\)",
+    "\\(\\varepsilon\\)",
+    "\\(\\mathrm{FIRSTVT}(B)\\)",
+    "\\(\\mathrm{FOLLOW}(A)\\)"
+   ],
+   "answer": 0,
+   "analysis": "形如 \\(A\\to \\alpha a B\\) 时，\\(a\\) 可能成为右端终结符，故 \\(a\\in\\mathrm{LASTVT}(A)\\)，且 \\(\\mathrm{LASTVT}(B)\\subseteq\\mathrm{LASTVT}(A)\\)。注意不是 FIRSTVT/FOLLOW。",
+   "source": "agent 思考出题",
+   "id": "q88"
+  },
+  {
+   "type": "填空",
+   "kp": "FIRSTVT/LASTVT",
+   "qtype": "集合计算",
+   "q": "文法 \\(G[S]\\)：\\(S\\to A c\\)，\\(A\\to a B\\mid b\\)，\\(B\\to d\\mid \\varepsilon\\)。则 \\(\\mathrm{FIRSTVT}(S)=\\) ______。（集合元素用逗号分隔，不写空串）",
+   "options": [
+    "\\(\\{a,b,c\\}\\)"
+   ],
+   "answer": 0,
+   "analysis": "先求 \\(\\mathrm{FIRSTVT}(A)=\\{a,b\\}\\)；\\(S\\to A c\\) 中 A 后跟 c，故 c 加入 FIRSTVT(S)，并传播 FIRSTVT(A)，得 {a,b,c}；B 的 d 不传播。易错：把 d 加入或漏掉 c。",
+   "source": "agent 思考出题",
+   "id": "q89"
+  },
+  {
+   "type": "选择",
+   "kp": "最左素短语",
+   "qtype": "概念判断",
+   "q": "关于最左素短语，下列说法正确的是（　）。",
+   "options": [
+    "最左素短语一定是当前句型的句柄",
+    "算符优先分析每次归约当前句型的最左素短语",
+    "素短语可以不含终结符",
+    "一个句型的最左素短语一定是单个终结符"
+   ],
+   "answer": 1,
+   "analysis": "算符优先分析按最左素短语归约；最左素短语不一定是句柄，素短语至少含一个终结符，也不一定为单终结符。易错：把句柄与最左素短语混同。",
+   "source": "agent 思考出题",
+   "id": "q90"
+  },
+  {
+   "type": "选择",
+   "kp": "最左素短语",
+   "qtype": "识别计算",
+   "q": "文法 \\(G[S]\\)：\\(S\\to A b\\)，\\(A\\to a A\\mid a\\)。句型 \\(a a b\\) 的最左素短语是（　）。",
+   "options": [
+    "第 1 个 \\(a\\)",
+    "第 2 个 \\(a\\)",
+    "\\(a a\\)",
+    "\\(b\\)"
+   ],
+   "answer": 1,
+   "analysis": "语法树中素短语为第 2 个 \\(a\\) 和 \\(b\\)，\\(a a\\) 含更小素短语，故最左素短语是第 2 个 \\(a\\)。易错：误取句柄或第 1 个 a。",
+   "source": "agent 思考出题",
+   "id": "q91"
+  },
+  {
+   "type": "选择",
+   "kp": "FIRSTVT/LASTVT",
+   "qtype": "集合计算",
+   "q": "文法 \\(G[S]\\)：\\(S\\to aA\\mid B\\)，\\(A\\to cS\\mid d\\)，\\(B\\to b\\)。则 \\(\\mathrm{FIRSTVT}(S)=\\)（　）。",
+   "options": [
+    "\\(\\{a,b\\}\\)",
+    "\\(\\{a,c\\}\\)",
+    "\\(\\{a,b,c\\}\\)",
+    "\\(\\{a,b,d\\}\\)"
+   ],
+   "answer": 0,
+   "analysis": "由 \\(S\\to aA\\) 得 \\(a\\)；由 \\(S\\to B\\to b\\) 得 \\(b\\)。\\(c,d\\) 只属于 \\(\\mathrm{FIRSTVT}(A)\\)，不会成为从 \\(S\\) 推出串的首终结符。",
+   "source": "agent 思考出题",
+   "id": "q92"
+  },
+  {
+   "type": "选择",
+   "kp": "FIRSTVT/LASTVT",
+   "qtype": "集合计算",
+   "q": "文法 \\(G[S]\\)：\\(S\\to B c\\mid e\\)，\\(B\\to A d\\mid f\\)，\\(A\\to g\\)。则 \\(\\mathrm{LASTVT}(B)=\\)（　）。",
+   "options": [
+    "\\(\\{d,f\\}\\)",
+    "\\(\\{d,g\\}\\)",
+    "\\(\\{c,d,f\\}\\)",
+    "\\(\\{d,f,g\\}\\)"
+   ],
+   "answer": 0,
+   "analysis": "由 \\(B\\to A d\\)，最右终结符为 \\(d\\)；由 \\(B\\to f\\) 得 \\(f\\)。\\(g\\) 属于 \\(\\mathrm{LASTVT}(A)\\)，但后面还有 \\(d\\)，不是 \\(B\\) 的最右终结符；\\(c\\) 属于 \\(S\\)。",
+   "source": "agent 思考出题",
+   "id": "q93"
+  },
+  {
+   "type": "选择",
+   "kp": "最左素短语",
+   "qtype": "概念理解",
+   "q": "在算符优先分析中，关于“最左素短语”的叙述正确的是（　）。",
+   "options": [
+    "句型中最左边的短语",
+    "句型所有素短语中位置最左的一个",
+    "产生式右部最左边的终结符串",
+    "当前句型的句柄"
+   ],
+   "answer": 1,
+   "analysis": "素短语是至少含一个终结符且不含更小素短语的短语；最左素短语是其中位置最左者。它与句柄、最左短语均不等同。",
+   "source": "agent 思考出题",
+   "id": "q94"
+  },
+  {
+   "type": "选择",
+   "kp": "语法树与二义性",
+   "qtype": "概念判断",
+   "q": "下列文法中，对某个句子存在两棵不同语法树的是（　）。",
+   "options": [
+    "\\(S\\to aS\\mid b\\)",
+    "\\(S\\to SS\\mid a\\)",
+    "\\(S\\to aA,\\ A\\to b\\)",
+    "\\(S\\to aSb\\mid ab\\)"
+   ],
+   "answer": 1,
+   "analysis": "\\(S\\to SS\\mid a\\) 对句子 \\(aaa\\) 可按 \\((aa)a\\) 与 \\(a(aa)\\) 两种方式构造语法树，故二义；其余文法结构唯一。",
+   "source": "agent 思考出题",
+   "id": "q95"
+  },
+  {
+   "type": "填空",
+   "kp": "推导与归约",
+   "qtype": "填空计算",
+   "q": "文法 \\(G[S]\\)：\\(S\\to aB\\mid c\\)，\\(B\\to bS\\mid d\\)。对句子 \\(abc\\) 进行规范归约，第一步使用的产生式是______。",
+   "options": [
+    "\\(S\\to c\\)"
+   ],
+   "answer": 0,
+   "analysis": "最右推导为 \\(S\\Rightarrow aB\\Rightarrow abS\\Rightarrow abc\\)，规范归约是逆过程，故第一步先将末尾 \\(c\\) 归约为 \\(S\\)，使用 \\(S\\to c\\)。",
+   "source": "agent 思考出题",
+   "id": "q96"
+  },
+  {
+   "type": "选择",
+   "kp": "FIRSTVT/LASTVT",
+   "qtype": "集合计算",
+   "q": "文法 \\(G[S]\\)：\\(S\\to aA\\mid BA\\)，\\(A\\to b\\mid\\varepsilon\\)，\\(B\\to c\\)。则 \\(\\mathrm{FIRSTVT}(S)=\\)（　）。",
+   "options": [
+    "\\(\\{a,c\\}\\)",
+    "\\(\\{a,b,c\\}\\)",
+    "\\(\\{c\\}\\)",
+    "\\(\\{a,b\\}\\)"
+   ],
+   "answer": 0,
+   "analysis": "由 \\(S\\to aA\\) 得 \\(a\\in\\mathrm{FIRSTVT}(S)\\)；由 \\(S\\to BA\\) 且 \\(B\\to c\\) 得 \\(c\\in\\mathrm{FIRSTVT}(S)\\)。\\(B\\) 无 \\(\\varepsilon\\) 产生式，故 \\(A\\) 的首终结符 \\(b\\) 不进入。",
+   "source": "agent 思考出题",
+   "id": "q97"
+  },
+  {
+   "type": "填空",
+   "kp": "FIRSTVT/LASTVT",
+   "qtype": "集合计算",
+   "q": "文法 \\(G[S]\\)：\\(S\\to aB\\mid Ab\\)，\\(A\\to c\\mid\\varepsilon\\)，\\(B\\to Sd\\mid e\\)。则 \\(\\mathrm{LASTVT}(S)=\\)______。",
+   "options": [
+    "\\(\\{a,b,d,e\\}\\)"
+   ],
+   "answer": 0,
+   "analysis": "\\(S\\to aB\\) 贡献 \\(a\\) 及 \\(\\mathrm{LASTVT}(B)=\\{d,e\\}\\)；\\(S\\to Ab\\) 右端为 \\(b\\)，贡献 \\(b\\)；\\(A\\to\\varepsilon\\) 不贡献。合并得 \\(\\{a,b,d,e\\}\\)。",
+   "source": "agent 思考出题",
+   "id": "q98"
+  },
+  {
+   "type": "选择",
+   "kp": "FIRSTVT/LASTVT",
+   "qtype": "概念辨析",
+   "q": "在算符优先分析中，优先关系 \\(a\\doteq b\\) 可直接由（　）确定。",
+   "options": [
+    "某产生式右部含有形如 \\(ab\\) 或 \\(aBb\\) 的片段（\\(a,b\\) 为终结符，\\(B\\) 为非终结符）",
+    "存在产生式 \\(A\\to aB\\) 且 \\(b\\in\\mathrm{FIRSTVT}(B)\\)",
+    "存在产生式 \\(A\\to Bb\\) 且 \\(a\\in\\mathrm{LASTVT}(B)\\)",
+    "只与 \\(\\mathrm{FOLLOW}\\) 集有关"
+   ],
+   "answer": 0,
+   "analysis": "\\(a\\doteq b\\) 仅由产生式中形如 \\(ab\\) 或 \\(aBb\\) 的片段确定；选项 B、C 分别对应 \\(\\lessdot\\) 和 \\(\\gtrdot\\) 关系。",
+   "source": "agent 思考出题",
+   "id": "q99"
+  },
+  {
+   "type": "选择",
+   "kp": "最左素短语",
+   "qtype": "句型分析",
+   "q": "文法 \\(G[S]\\)：\\(S\\to Ac\\)，\\(A\\to aAb\\mid ab\\)。句型 \\(aabbc\\) 的最左素短语是（　）。",
+   "options": [
+    "\\(ab\\)",
+    "\\(aabb\\)",
+    "\\(aabbc\\)",
+    "\\(b\\)"
+   ],
+   "answer": 0,
+   "analysis": "内层 \\(A\\to ab\\) 得到的 \\(ab\\) 不含更小素短语，是素短语；外层 \\(A\\to aAb\\) 得到的 \\(aabb\\) 含 \\(ab\\)，不是素短语。故最左素短语为 \\(ab\\)。",
+   "source": "agent 思考出题",
+   "id": "q100"
+  },
+  {
+   "type": "选择",
+   "kp": "最左素短语",
+   "qtype": "概念辨析",
+   "q": "在算符优先分析中，关于最左素短语与句柄的关系，正确的是（　）。",
+   "options": [
+    "最左素短语一定是句柄",
+    "最左素短语不一定是句柄",
+    "句柄一定不是素短语",
+    "最左素短语一定不是短语"
+   ],
+   "answer": 1,
+   "analysis": "算符优先分析归约当前句型的最左素短语；它与规范归约的句柄不一定一致，故最左素短语不一定是句柄。",
+   "source": "agent 思考出题",
+   "id": "q101"
   }
  ]
 }

@@ -33,6 +33,7 @@ LLM_API_KEY = os.environ.get('LLM_API_KEY', '')
 LLM_MODEL = os.environ.get('LLM_MODEL', 'TeleChat3-438B-A24B')
 
 DB_PATH = os.path.join(BASE_DIR, 'data', 'app.db')
+UPLOAD_DIR = os.path.join(os.path.dirname(BASE_DIR), 'uploads')  # 多模态附件（按课程/用户分目录）
 
 # 知识库写权限（Claudian 式"YOLO 开关"）：readonly=True 时技能只预览不落库
 import contextvars

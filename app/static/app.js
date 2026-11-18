@@ -35,6 +35,7 @@ function openView(name) {
   document.getElementById('mainScroll').scrollTop = 0;
   if (name === 'graph' && !graphDrawn) drawGraph();
   if (name === 'plan') loadHomework();
+  if (name === 'quiz') loadSelftests();
   if (name === 'variant') loadVariantList();
   setTimeout(resizeAllCharts, 60);   // 视图显示后图表重排
 }
@@ -64,6 +65,20 @@ async function refreshTree() {
     vaultPages = await api('/api/wiki/pages');
     renderTree(vaultPages);
   } catch (e) { }
+}
+
+// 投稿当前笔记页（→ 教师审核队列）
+async function submitCurrentPage() {
+  if (!currentFile) { toast('先打开一篇笔记再投稿'); return; }
+  try {
+    const r = await post('/api/submissions', {
+      title: currentFile.replace(/\.md$/, '').split('/').pop(),
+      kind: '笔记', source_file: currentFile, student_id: SID,
+    });
+    toast('✅ 投稿已提交（#' + r.id + '，待教师审核）');
+  } catch (e) {
+    toast('投稿失败：' + e.message);
+  }
 }
 
 function renderTree(pages) {
@@ -136,6 +151,7 @@ async function openPage(file, pushHist = true) {
   // PDF/附件 → 内嵌预览（浏览器原生 PDF 渲染）
   if (/\.pdf$/i.test(fname)) {
     view.innerHTML = '<iframe src="/api/wiki/file?name=' + encodeURIComponent(fname) +
+      '&course=' + encodeURIComponent(COURSE_ID) + '&token=' + encodeURIComponent(TOKEN) +
       '" style="width:100%;height:78vh;border:none;border-radius:12px;background:#525659"></iframe>';
     document.getElementById('mainScroll').scrollTop = 0;
     loadRelated(fname);
@@ -166,7 +182,7 @@ function renderMarkdown(page, anchor = '') {
     return `<a class="wikilink" onclick="openPage('${t.replace(/'/g, '')}')" title="${t}">${label}</a>`;
   });
   const view = document.getElementById('mdView');
-  view.innerHTML = marked.parse(body);
+  view.innerHTML = renderMD(body);
   // 行内代码中的文件路径（如 原始资料/xxx.md）→ 可点击打开
   view.querySelectorAll('code').forEach(c => {
     const t = c.textContent.trim();
@@ -283,19 +299,51 @@ function toast(msg) {
 }
 
 // ================= Smart Connections（关联度：散点地图 + 分数列表） =================
+let relList = [];
+
 async function loadRelated(file) {
   let list = [];
   try {
     list = await api('/api/wiki/related?name=' + encodeURIComponent(file) + '&k=8');
   } catch (e) { }
+  relList = list;
   renderConnMap(file, list);
-  document.getElementById('relatedList').innerHTML = list.length ? list.map(r => `
-    <div class="related-item" onclick="openPage('${r.file}')">
-      <div><span class="r-score">${(r.score ?? 0).toFixed(2)}</span>
-        <span class="r-file">${r.file.replace(/\.md$/, '').split('/').pop()}</span></div>
-      <div class="r-meta">${r.chapter}${(r.kp_overlap || []).length ? ' · 共同: ' + r.kp_overlap.join('/') : ''}</div>
-      <div class="r-bar"><i style="width:${Math.min((r.score ?? 0) * 100, 100).toFixed(0)}%"></i></div>
+  document.getElementById('relatedList').innerHTML = list.length ? list.map((r, i) => `
+    <div class="related-item" id="rel-${i}">
+      <div class="rel-head" onclick="toggleRel(${i})">
+        <div><span class="r-score">${(r.score ?? 0).toFixed(2)}</span>
+          <span class="r-file">${r.file.replace(/\.md$/, '').split('/').pop()}</span>
+          <span class="rel-caret" id="rel-caret-${i}">▸</span></div>
+        <div class="r-meta">${r.chapter}${(r.kp_overlap || []).length ? ' · 共同: ' + r.kp_overlap.join('/') : ''}
+          <a class="rel-open" onclick="event.stopPropagation();openPage('${r.file}')">打开 →</a></div>
+        <div class="r-bar"><i style="width:${Math.min((r.score ?? 0) * 100, 100).toFixed(0)}%"></i></div>
+      </div>
+      <div class="rel-body" id="rel-body-${i}" style="display:none"></div>
     </div>`).join('') : '<p class="muted">暂无关联</p>';
+}
+
+// 展开/收起关联文档内容预览（图谱节点点击 → 强制展开并滚动到该条）
+async function toggleRel(i, forceOpen = false) {
+  const body = document.getElementById('rel-body-' + i);
+  const caret = document.getElementById('rel-caret-' + i);
+  if (!body) return;
+  const open = forceOpen || body.style.display === 'none';
+  if (open && !body.dataset.loaded) {
+    body.innerHTML = '<p class="muted">加载中…</p>';
+    try {
+      const page = await api('/api/wiki/page?name=' + encodeURIComponent(relList[i].file));
+      const raw = (page.body || '').slice(0, 1600);
+      body.innerHTML = '<div class="rel-content">' + renderMD(raw) +
+        ((page.body || '').length > 1600 ? '<p class="muted">…（已截断，点"打开"看全文）</p>' : '') + '</div>';
+      body.dataset.loaded = '1';
+      renderChatMathSoon();
+    } catch (e) {
+      body.innerHTML = '<p class="muted">预览失败：' + e.message + '</p>';
+    }
+  }
+  body.style.display = open ? 'block' : 'none';
+  if (caret) caret.textContent = open ? '▾' : '▸';
+  if (open) body.parentElement.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 }
 
 function renderConnMap(file, list) {
@@ -330,6 +378,7 @@ function renderConnMap(file, list) {
       label: { show: true, position: 'bottom', fontSize: 9, color: '#5b6178',
                formatter: shortName(short) + '\n' + score.toFixed(2) },
       file: r.file,
+      idx: i,
     });
     links.push({
       source: me, target: short,
@@ -338,7 +387,7 @@ function renderConnMap(file, list) {
     });
   });
   chart.setOption({
-    tooltip: { formatter: p => p.data.file ? '关联度 ' + ((p.data.value ?? 0).toFixed?.(2) || '') + '<br/>' + p.name + '<br/>点击打开' : '当前文档：' + me },
+    tooltip: { formatter: p => p.data.file ? '关联度 ' + ((p.data.value ?? 0).toFixed?.(2) || '') + '<br/>' + p.name + '<br/>点击展开下方内容' : '当前文档：' + me },
     xAxis: { show: false, min: -335, max: 335 },
     yAxis: { show: false, min: -335, max: 335 },
     grid: { left: 4, right: 4, top: 16, bottom: 4 },
@@ -353,7 +402,10 @@ function renderConnMap(file, list) {
   chart.resize();
   setTimeout(() => chart.resize(), 80);
   chart.off('click');
-  chart.on('click', p => { if (p.data.file) openPage(p.data.file); });
+  chart.on('click', p => {
+    if (typeof p.data.idx === 'number') toggleRel(p.data.idx, true);
+    else if (p.data.file) openPage(p.data.file);
+  });
 }
 
 // ================= TeleAgent 助教（Claudian 式） =================
@@ -379,8 +431,8 @@ async function runTool(name) {
   if (greet) greet.remove();
   const label = { graph: '🗺 考点地图', quiz: '✏️ 自测', diag: '🎯 薄弱诊断', plan: '📅 复习计划', variant: '🔁 变式训练' }[name];
   if (name === 'quiz') {
-    await startQuiz();
-    pushMsg('bot', `<span class="ta-tag">TeleAgent</span><br>已为你开始一轮自测（中栏作答）。做完我帮你归因错题、更新薄弱诊断。`);
+    loadSelftests();
+    pushMsg('bot', `<span class="ta-tag">TeleAgent</span><br>自测台已就绪（中栏）。点「生成自测卷」开始，做完逐题自评，错题自动计入学情。`);
   } else if (name === 'diag') {
     const list = await api('/api/quiz/weakness?student_id=' + SID);
     loadWeakness();
@@ -398,19 +450,78 @@ async function runTool(name) {
   toast('已打开：' + label);
 }
 
-// 多轮对话历史（随 /api/ask 一起发模型，跨会话各自维护）
+// 多轮对话历史（随 /api/agent/chat 一起发模型，跨会话各自维护）
 let chatHistory = [];
+// 多模态附件（file_id 列表）
+let attachments = [];
+
+function onAttach(inp) {
+  [...inp.files].forEach(f => uploadAttach(f));
+  inp.value = '';
+}
+async function uploadAttach(file) {
+  const fd = new FormData();
+  fd.append('file', file);
+  try {
+    const r = await fetch('/api/upload', {
+      method: 'POST',
+      headers: { 'X-Token': TOKEN, 'X-Course-Id': COURSE_ID },
+      body: fd,
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || '上传失败');
+    attachments.push({ id: data.file_id, name: data.name });
+    renderAttach();
+    toast('📎 已附加 ' + data.name);
+  } catch (e) {
+    toast('附件上传失败：' + e.message);
+  }
+}
+function renderAttach() {
+  const box = document.getElementById('attachChips');
+  if (!box) return;
+  box.innerHTML = attachments.map((a, i) =>
+    `<span class="attach-chip">📎 ${a.name}<button onclick="removeAttach(${i})">×</button></span>`).join('');
+}
+function removeAttach(i) { attachments.splice(i, 1); renderAttach(); }
+
+// 拖拽 & 粘贴上传（composer 区域）
+(function initAttachDnD() {
+  const zone = document.querySelector('.assist');
+  if (!zone) return;
+  zone.addEventListener('dragover', e => {
+    e.preventDefault();
+    zone.classList.add('drag-over');
+  });
+  zone.addEventListener('dragleave', e => {
+    if (!e.relatedTarget || !zone.contains(e.relatedTarget)) zone.classList.remove('drag-over');
+  });
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    const fs = [...(e.dataTransfer && e.dataTransfer.files || [])];
+    if (fs.length) fs.forEach(uploadAttach);
+  });
+  document.addEventListener('paste', e => {
+    const fs = [...(e.clipboardData && e.clipboardData.files || [])];
+    if (fs.length) {
+      e.preventDefault();
+      fs.forEach(uploadAttach);
+    }
+  });
+})();
+
 
 async function ask() {
   const input = document.getElementById('chatQ');
   let q = input.value.trim();
-  if (!q && !quotedText) return;
+  if (!q && !quotedText && !attachments.length) return;
   // 选中引用作为上下文随问题一起输入模型
   if (quotedText) {
     q = (q ? q + '\n\n' : '') + '【我选中的资料片段】\n' + quotedText;
     clearQuote();
   }
-  if (!q) return;
+  if (!q) q = '📎 ' + attachments.map(a => a.name).join('、');
   // /技能 要求 → skill 调用（agent 调 skill → 模型思考 → 受约束回答）
   if (q.startsWith('/')) {
     const m = q.match(/^\/(\S+)\s*([\s\S]*)$/);
@@ -438,16 +549,23 @@ async function ask() {
   chatHistory.push({ role: 'user', content: q.slice(0, 600) });
   const thinking = pushMsg('bot', `<span class="ta-tag">TeleAgent</span><br>检索知识库中…`);
   try {
-    const r = await post('/api/ask', {
-      question: q, student_id: SID, context_file: ctxFile,
-      hint_first: document.getElementById('hintFirst').checked,
-      history: sendHistory,
+    const r = await post('/api/agent/chat', {
+      message: q, student_id: SID, history: sendHistory,
+      attachments: attachments.map(a => a.id),
     });
+    attachments = [];
+    renderAttach();
     chatHistory.push({ role: 'assistant', content: (r.answer || '').replace(/<[^>]+>/g, ' ').slice(0, 600) });
     updateCtxStats();
     const srcs = (r.sources || []).map(s =>
       `${s.file || s.document_name || ''}${s.chapter ? '（' + s.chapter + '）' : ''}`).join('；');
-    thinking.innerHTML = `<span class="ta-tag">TeleAgent</span><br><div class="md-out">${marked.parse(r.answer || '')}</div>
+    const traceHtml = (r.trace && r.trace.length)
+      ? `<details class="trace-box"><summary>🔧 执行轨迹（${r.trace.length} 次工具调用）</summary>${
+          r.trace.map(t => `<div class="trace-line">${t.ok ? '✅' : '❌'} <b>${t.tool}</b> <span class="muted">${
+            String(JSON.stringify(t.args || {})).slice(0, 90)}</span></div>`).join('')}</details>`
+      : '';
+    thinking.innerHTML = `<span class="ta-tag">TeleAgent</span><br><div class="md-out">${renderMD(r.answer || '')}</div>
+      ${traceHtml}
       ${srcs ? `<span class="src">📎 资料出处：${srcs}</span>` : ''}`;
   } catch (e) {
     thinking.innerHTML = `<span class="ta-tag">TeleAgent</span><br>出错了：${e.message}`;
@@ -475,7 +593,7 @@ function showOnboarding() {
   if (!log) return;
   const acts = [
     ['🗺', '看考点地图', '章节 → 知识点 → 考点三级图谱', "openView('graph')"],
-    ['✏️', '开始自测刷题', 'AI 结合你的学情出全新题', "openView('quiz');startQuiz()"],
+    ['✏️', '开始自测刷题', 'AI 结合你的学情出全新卷', "openView('quiz')"],
     ['🎯', '诊断薄弱点', '错因四分类 · 对症训练', "openView('diag');loadWeakness()"],
     ['📅', '生成复习计划', '按考试倒计时逐天拆解', "openView('plan')"],
     ['🔁', '变式训练', '原题换情境，举一反三', "openView('variant');fillKpSelect()"],
@@ -780,7 +898,7 @@ async function runSkill(name, params = {}) {
       kb_write: (document.getElementById('kbWrite') || {}).checked !== false,
     });
     thinking.innerHTML = `<span class="ta-tag">TeleAgent · ${r.label || ''}</span><br>
-      <div class="md-out">${marked.parse(r.output || '')}</div>
+      <div class="md-out">${renderMD(r.output || '')}</div>
       ${r.record_file ? `<div class="card-mini">📄 <a class="wikilink" onclick="openPage('${r.record_file}')">打开知识库记录 →</a></div>` : ''}
       <span class="src">✅ 规则检查通过：${(r.rules || []).join(' ✓ ')}</span>`;
     if (r.record_file) refreshTree();
@@ -793,6 +911,69 @@ async function runSkill(name, params = {}) {
 
 // ================= 自测 =================
 let quizList = [], quizIdx = 0, quizRight = 0;
+
+// ===== 自测整卷（按钮生成 · 历史回看 · 对/错/不确定自评） =====
+async function genSelftest() {
+  const el = document.getElementById('quizArea');
+  el.innerHTML = '<p class="muted">🧠 正在命制整卷…（约 30-60 秒）</p>';
+  try {
+    const st = await post('/api/selftest/generate', { student_id: SID });
+    renderSelftest(st);
+    loadSelftests();
+    toast('📝 自测卷已生成');
+  } catch (e) {
+    el.innerHTML = `<p style="color:var(--bad)">❌ 生成失败：${e.message}</p>
+      <button class="primary" onclick="genSelftest()">重试</button>`;
+  }
+}
+function renderSelftest(st) {
+  const el = document.getElementById('quizArea');
+  el.innerHTML = `<div class="card"><div class="row space"><h3>${st.title || '自测卷'}</h3>
+      <span class="muted">逐题自评：✅ 正确 / ❌ 错误 / ❓ 不确定</span></div>
+    <div class="md-out">${renderMD(st.content_md || '')}</div></div>`;
+  const meta = st.meta || [];
+  el.querySelectorAll('h2').forEach(h => {
+    const m = h.textContent.match(/第(\d+)题/);
+    if (!m) return;
+    const idx = +m[1];
+    const mi = meta.find(x => x.idx === idx) || { kp: '' };
+    const bar = document.createElement('div');
+    bar.className = 'selftest-mark';
+    bar.dataset.idx = idx;
+    bar.innerHTML = [['正确', '✅'], ['错误', '❌'], ['不确定', '❓']].map(([v, ic]) =>
+      `<button class="ghost" onclick="markSelftest(${st.id || 0}, ${idx}, '${v}', '${(mi.kp || '').replace(/'/g, '')}', this)">${ic} ${v}</button>`).join('');
+    h.after(bar);
+  });
+  renderChatMathSoon();
+}
+async function markSelftest(id, idx, verdict, kp, btn) {
+  if (!id) { toast('先生成并保存自测卷再自评'); return; }
+  try {
+    await post('/api/selftest/mark', { selftest_id: id, idx, verdict, kp, student_id: SID });
+    btn.parentElement.querySelectorAll('button').forEach(b => b.style.opacity = .4);
+    btn.style.opacity = 1;
+    toast(verdict === '正确' ? '✅ 已记录' : '📥 已收入错题本并计入学情');
+  } catch (e) { toast('记录失败：' + e.message); }
+}
+async function loadSelftests() {
+  const el = document.getElementById('selftestHistory');
+  if (!el) return;
+  try {
+    const list = await api('/api/selftests?student_id=' + SID);
+    el.innerHTML = list.length ? `<p class="muted" style="margin:10px 0 6px">📚 过往自测卷</p>
+      <div class="cards">${list.map(s => `
+        <div class="card hw-card" style="cursor:pointer" onclick="openSelftest(${s.id})">
+          <b style="font-size:13px">📄 ${s.title || '自测卷'}</b>
+          <p class="muted">${s.created_at ? new Date(s.created_at * 1000).toLocaleString('zh-CN', { hour12: false }) : ''} · ${s.count || 0} 题</p>
+        </div>`).join('')}</div>` : '';
+  } catch (e) { }
+}
+async function openSelftest(id) {
+  try {
+    const st = await api('/api/selftest?id=' + id);
+    renderSelftest(st);
+  } catch (e) { toast('加载失败：' + e.message); }
+}
 
 async function startQuiz() {
   const area = document.getElementById('quizArea');
@@ -904,11 +1085,11 @@ async function loadHomework() {
     const el = document.getElementById('hwArea');
     if (!el) return;
     el.innerHTML = list.length ? list.map(h => `
-      <div class="card">
+      <div class="card hw-card" onclick="const d=this.querySelector('.hw-detail');d.style.display=d.style.display==='block'?'none':'block'">
         <h3>📋 ${h.title}</h3>
         <p><span class="tag">${h.kp || '综合'}</span>
-           <span class="muted">截止 ${h.due_date || '未定'} · ${h.teacher || ''}</span></p>
-        <p class="muted">${(h.detail || '').slice(0, 80)}</p>
+           <span class="muted">截止 ${h.due_date || '未定'} · ${h.teacher || ''} · 点击展开详情</span></p>
+        <div class="hw-detail" style="display:none"><div class="md-out">${renderMD(h.detail || '（无详情）')}</div></div>
       </div>`).join('') : '<p class="muted">暂无作业</p>';
   } catch (e) { }
 }
@@ -1142,27 +1323,56 @@ document.addEventListener('keydown', e => {
 });
 
 
-// 上下文占用（Claudian 式：环形进度 + 百分比，会话+文档+引用+输入 ≈ 模型上下文窗口）
-function updateCtxStats() {
-  const el = document.getElementById('ctxStats');
-  if (!el) return;
+// ===== 上下文占用（Claudian 式：环形 + tokens + 明细弹层） =====
+function ctxBreakdown() {
   const chip = document.getElementById('ctxChip');
   const file = (chip && chip.dataset.file) || '';
   let quote = '';
-  try { quote = quotedText || ''; } catch (e) { }   // quotedText 声明在后，防 TDZ
+  try { quote = quotedText || ''; } catch (e) { }
   const q = (document.getElementById('chatQ') || {}).value || '';
-  const histChars = chatHistory.reduce((n, m) => n + (m.content || '').length, 0);
-  const chars = histChars + quote.length + q.length + (file ? 1500 : 0);
-  const pct = Math.min(chars / 2 / 128000 * 100, 100);   // 粗估 token（字符/2）占 128K 窗口
+  const tok = c => Math.round(c / 2);
+  return [
+    ['对话历史', tok(chatHistory.reduce((n, m) => n + (m.content || '').length, 0))],
+    ['当前输入/引用', tok(q.length + quote.length)],
+    ['附件解析', (typeof attachments !== 'undefined' ? attachments.length : 0) * 800],
+    ['关联文档', file ? 750 : 0],
+    ['系统与记忆', 1200],
+  ];
+}
+function renderCtxPop(rows, used, pctStr) {
+  const pop = document.getElementById('ctxPop');
+  if (!pop) return;
+  const free = Math.max(128000 - used, 0);
+  const fmt = v => v >= 1000 ? (v / 1000).toFixed(1) + 'k' : String(v);
+  pop.innerHTML = `<div class="ctx-pop-head">上下文窗口 <b>${fmt(used)} / 128k（${pctStr}%）</b></div>
+    <div class="ctx-bar"><i style="width:${pctStr}%"></i></div>
+    ${rows.map(([n, v]) => `<div class="ctx-row"><span>${n}</span><b>${fmt(v)}</b></div>`).join('')}
+    <div class="ctx-row"><span>剩余空间</span><b>${fmt(free)}</b></div>`;
+}
+function updateCtxStats() {
+  const el = document.getElementById('ctxStats');
+  if (!el) return;
+  const rows = ctxBreakdown();
+  const used = rows.reduce((n, r) => n + r[1], 0);
+  const pct = Math.min(used / 128000 * 100, 100);
   const pctStr = pct < 10 ? pct.toFixed(1) : String(Math.round(pct));
   const r = 6, c = 2 * Math.PI * r;
   const off = c * (1 - pct / 100);
+  const fmt = v => v >= 1000 ? (v / 1000).toFixed(1) + 'k' : String(v);
   el.innerHTML = `<svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true">
       <circle cx="8" cy="8" r="${r}" fill="none" stroke="var(--line)" stroke-width="2.2"></circle>
       <circle cx="8" cy="8" r="${r}" fill="none" stroke="#d97757" stroke-width="2.2"
         stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"
         transform="rotate(-90 8 8)"></circle>
-    </svg><span>${pctStr}%</span>`;
+    </svg><span class="ctx-tokens">${fmt(used)} / 128k</span>`;
+  el.title = 'Context usage';
+  const pop = document.getElementById('ctxPop');
+  if (pop && pop.classList.contains('show')) renderCtxPop(rows, used, pctStr);
+}
+function toggleCtxPop() {
+  const pop = document.getElementById('ctxPop');
+  if (!pop) return;
+  if (pop.classList.toggle('show')) updateCtxStats();
 }
 
 
@@ -1254,26 +1464,29 @@ let curSess = 0;
 
 function loadSessions() {
   try { sessions = JSON.parse(localStorage.getItem(SESS_KEY) || '[]'); } catch (e) { sessions = []; }
+  sessions = sessions.map(s => ({ pinned: false, archived: false, msgs: [], ...s }));
   if (!sessions.length) newSession(true);
 }
 function saveSessions() {
-  try { localStorage.setItem(SESS_KEY, JSON.stringify(sessions.slice(-20))); } catch (e) { }
+  // 置顶会话永不被截断
+  const pinned = sessions.filter(s => s.pinned);
+  const rest = sessions.filter(s => !s.pinned).slice(-30);
+  try { localStorage.setItem(SESS_KEY, JSON.stringify(pinned.concat(rest))); } catch (e) { }
 }
 function newSession(silent) {
-  sessions.push({ id: Date.now(), title: '新会话', time: new Date().toLocaleString('zh-CN', { hour12: false }), msgs: [] });
+  sessions.push({ id: Date.now(), title: '新会话', time: new Date().toLocaleString('zh-CN', { hour12: false }), msgs: [], pinned: false, archived: false });
   curSess = sessions.length - 1;
   chatHistory = [];
   saveSessions();
   if (!silent) {
     const log = document.getElementById('chatLog');
-    if (log) log.innerHTML = '<div class="greet"><div class="greet-title">TeleAgent</div><div class="greet-sub">Good day</div><div class="linked-chip" id="linkedChip">🔗 Linked content: 知识库</div></div>';
+    if (log) log.innerHTML = '<div class="greet"><div class="greet-title">TeleAgent</div><div class="greet-sub">Good day</div><div class="linked-chip" id="linkedChip">\u{1F517} Linked content: \u77e5\u8bc6\u5e93</div></div>';
     renderSessions();
-    zenUpdate('新会话已创建');
+    zenUpdate('\u65b0\u4f1a\u8bdd\u5df2\u521b\u5efa');
   }
 }
 function switchSession(i) {
   curSess = i;
-  renderSessions();
   const log = document.getElementById('chatLog');
   const s = sessions[i];
   if (!log || !s) return;
@@ -1281,34 +1494,148 @@ function switchSession(i) {
     role: m.cls === 'user' ? 'user' : 'assistant',
     content: String(m.html || '').replace(/<[^>]+>/g, ' ').slice(0, 600),
   })).filter(m => m.content.trim());
-  updateCtxStats();
   log.innerHTML = s.msgs.map(m => '<div class="msg ' + m.cls + '">' + m.html + '</div>').join('')
-    || '<div class="greet"><div class="greet-title">TeleAgent</div><div class="greet-sub">Good day</div><div class="linked-chip" id="linkedChip">🔗 Linked content: 知识库</div></div>';
-  document.querySelectorAll('.sess-item').forEach((el, j) => el.classList.toggle('sel', j === i));
+    || '<div class="greet"><div class="greet-title">TeleAgent</div><div class="greet-sub">Good day</div><div class="linked-chip" id="linkedChip">\u{1F517} Linked content: \u77e5\u8bc6\u5e93</div></div>';
+  renderSessions();
+  updateCtxStats();
 }
+
+// ---- 会话面板（Claudian 式：New/Search/Archive + PINNED + 置顶/归档/删除） ----
+let sessView = 'active';        // active | archived
+let sessSearchOpen = false;
+let sessFilter = '';
+
 function renderSessions() {
   const pop = document.getElementById('sessionsPop');
   if (!pop) return;
-  pop.innerHTML = '<button class="sess-new" onclick="newSession()">＋ 新会话</button>' +
-    sessions.map((s, i) => `<div class="sess-item ${i === curSess ? 'sel' : ''}" onclick="switchSession(${i})">
-      <span class="t">${s.title}</span><span class="d">${s.time}</span></div>`).join('');
+  const f = sessFilter.toLowerCase();
+  const match = s => !f || (s.title || '').toLowerCase().includes(f);
+  const archived = sessions.filter(s => s.archived && match(s));
+  const active = sessions.filter(s => !s.archived && match(s));
+  const pinned = active.filter(s => s.pinned);
+  const normal = active.filter(s => !s.pinned);
+  const item = s => {
+    const i = sessions.indexOf(s);
+    return `<div class="sess-item ${i === curSess ? 'sel' : ''}" onclick="switchSession(${i})">
+      <span class="t">${s.title}</span>
+      <span class="sess-acts">
+        <button class="sess-act" title="${s.pinned ? 'Unpin' : 'Pin'}" onclick="event.stopPropagation();pinSession(${i})">${s.pinned ? '\u{1F4CC}' : '\u{1F4CD}'}</button>
+        <button class="sess-act" title="${s.archived ? '\u53d6\u6d88\u5f52\u6863' : 'Archive'}" onclick="event.stopPropagation();archiveSession(${i})">${s.archived ? '\u{1F4E4}' : '\u{1F4E5}'}</button>
+        <button class="sess-act" title="\u5220\u9664" onclick="event.stopPropagation();delSession(${i})">\u{1F5D1}</button>
+      </span>
+    </div>`;
+  };
+  const searchBox = sessSearchOpen
+    ? `<input class="sess-search" placeholder="\u641c\u7d22\u4f1a\u8bdd\u2026" value="${sessFilter}"
+        oninput="sessFilter=this.value;renderSessions()">` : '';
+  const toolbar = `<div class="sess-bar">
+      <button class="sess-new" onclick="newSession()">\uFF0B \u65b0\u4f1a\u8bdd</button>
+      <button class="sess-tool" title="\u641c\u7d22" onclick="sessSearchOpen=!sessSearchOpen;renderSessions()">\u{1F50D}</button>
+      <button class="sess-tool" title="\u5f52\u6863" onclick="sessView=sessView==='archived'?'active':'archived';renderSessions()">${sessView === 'archived' ? '\u2190 \u8fd4\u56de' : '\u{1F5C3} \u5f52\u6863'}</button>
+    </div>${searchBox}`;
+  if (sessView === 'archived') {
+    pop.innerHTML = toolbar + (archived.length
+      ? '<div class="sess-label">ARCHIVED</div>' + archived.map(item).join('')
+      : '<p class="muted" style="padding:8px">\u{1F5C3} \u5f52\u6863\u533a\u4e3a\u7a7a</p>');
+    return;
+  }
+  pop.innerHTML = toolbar +
+    (pinned.length ? '<div class="sess-label">PINNED</div>' + pinned.map(item).join('') : '') +
+    '<div class="sess-label">SESSIONS</div>' +
+    (normal.length ? normal.map(item).join('') : '<p class="muted" style="padding:8px">\u6682\u65e0\u4f1a\u8bdd</p>');
 }
 function toggleSessions() {
   const pop = document.getElementById('sessionsPop');
   if (pop) pop.classList.toggle('show');
 }
+function pinSession(i) {
+  if (!sessions[i]) return;
+  sessions[i].pinned = !sessions[i].pinned;
+  saveSessions(); renderSessions();
+}
+function archiveSession(i) {
+  if (!sessions[i]) return;
+  sessions[i].archived = !sessions[i].archived;
+  if (sessions[i].archived && i === curSess) {
+    const next = sessions.findIndex((s, j) => j !== i && !s.archived);
+    if (next >= 0) switchSession(next); else newSession();
+  }
+  saveSessions(); renderSessions();
+}
+function delSession(i) {
+  if (!sessions[i]) return;
+  if (!confirm('\u786e\u8ba4\u5220\u9664\u4f1a\u8bdd\u300c' + sessions[i].title + '\u300d\uff1f')) return;
+  sessions.splice(i, 1);
+  if (!sessions.length) { newSession(); return; }
+  if (i === curSess) switchSession(Math.min(curSess, sessions.length - 1));
+  else { if (i < curSess) curSess--; saveSessions(); renderSessions(); }
+}
 
-// 助手：记录消息进当前会话（pushMsg 增强）
-function sessRecord(cls, html) {
+// ---- 会话记录：DOM 同步（消息渲染完成后再捕获，修复历史不加载） ----
+let _sessSyncT = null;
+function sessSync() {
   if (!sessions.length) loadSessions();
   const s = sessions[curSess];
-  if (!s) return;
-  s.msgs.push({ cls, html });
-  if (s.title === '新会话' && cls === 'user') {
-    s.title = html.replace(/<[^>]+>/g, '').slice(0, 18) || s.title;
+  const log = document.getElementById('chatLog');
+  if (!s || !log) return;
+  const divs = [...log.querySelectorAll(':scope > .msg')];
+  if (!divs.length) return;
+  s.msgs = divs.map(d => ({ cls: d.classList.contains('user') ? 'user' : 'bot', html: d.innerHTML }));
+  if (s.title === '\u65b0\u4f1a\u8bdd') {
+    const u = divs.find(d => d.classList.contains('user'));
+    if (u) s.title = u.textContent.trim().slice(0, 18) || s.title;
   }
   s.time = new Date().toLocaleString('zh-CN', { hour12: false });
   saveSessions();
+}
+
+// ===== Markdown+数学 渲染（Claudian 式：公式先抽保护区，防 marked 吃反斜杠/下划线） =====
+function renderMD(text) {
+  const slots = [];
+  const stash = m => { slots.push(m); return '\uE000' + (slots.length - 1) + '\uE001'; };
+  let t = String(text || '');
+  t = t.replace(/\$\$[\s\S]+?\$\$/g, stash);
+  t = t.replace(/\\\[[\s\S]+?\\\]/g, stash);
+  t = t.replace(/\\\([\s\S]+?\\\)/g, stash);
+  t = t.replace(/\$[^$\n]+?\$/g, stash);
+  let html;
+  try { html = marked.parse(t); } catch (e) { html = t; }
+  html = html.replace(/\uE000(\d+)\uE001/g, (_, i) => {
+    let m = slots[+i];
+    if (m.startsWith('\\[')) m = '$$' + m.slice(2, -2) + '$$';
+    else if (m[0] === '$' && m[1] !== '$') m = '\\(' + m.slice(1, -1) + '\\)';
+    return m;
+  });
+  return html;
+}
+
+// ===== 聊天/预览区 LaTeX 渲染（KaTeX，修公式裸显） =====
+let _mathT = null;
+function renderChatMath() {
+  if (typeof renderMathInElement !== 'function') return;
+  for (const id of ['chatLog', 'relatedList', 'mainScroll']) {
+    const el = document.getElementById(id);
+    if (!el) continue;
+    try {
+      renderMathInElement(el, {
+        delimiters: [
+          { left: '$$', right: '$$', display: true },
+          { left: '\\(', right: '\\)', display: false },
+          { left: '\\[', right: '\\]', display: true },
+        ],
+        throwOnError: false,
+      });
+    } catch (e) { }
+  }
+}
+function renderChatMathSoon() {
+  clearTimeout(_mathT);
+  _mathT = setTimeout(renderChatMath, 250);
+}
+
+function sessSyncSoon() {
+  clearTimeout(_sessSyncT);
+  _sessSyncT = setTimeout(sessSync, 300);
 }
 
 // ================= Inline Edit（选中改写） =================
@@ -1455,6 +1782,16 @@ setTimeout(() => {
     loadSessions();
     renderSessions();
     updateCtxStats();
+    const _log = document.getElementById('chatLog');
+    if (_log && window.MutationObserver) {
+      new MutationObserver(() => { sessSyncSoon(); renderChatMathSoon(); })
+        .observe(_log, { childList: true, subtree: true });
+    }
+    const _main = document.getElementById('mainScroll');
+    if (_main && window.MutationObserver) {
+      new MutationObserver(renderChatMathSoon)
+        .observe(_main, { childList: true, subtree: true });
+    }
   }
 }, 150);
 

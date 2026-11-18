@@ -82,7 +82,8 @@ class QuestionSkill(Skill):
         '"analysis":"完整解析：解题步骤+易错点"},\n'
         '{"type":"填空","kp":"知识点","qtype":"题型","q":"题干______。",'
         '"options":["标准答案"],"answer":0,"source":"命题依据","analysis":"解析"}]}\n'
-        '说明：选择题 4 个选项、answer 为正确项下标(0-3)；填空题 options 只含 1 个标准答案、answer 为 0。')
+        '说明：选择题 4 个选项、answer 为正确项下标(0-3)；填空题 options 只含 1 个标准答案、answer 为 0。'
+        '公式必须为可渲染标准 LaTeX：块级 $$..$$、行内 \(..\)，上下标用花括号包裹（$a^{m}$、$x_{1}$），严禁 $a^m_b^n$ 裸上下标。')
     rules = ['自主查库定考法（不指定知识点也能出）', '结合学情薄弱点命题',
              '题目全新原创、答案唯一', '解析完整（步骤+易错点）', '检查通过才入题库']
     tools = ['kb.search', 'profile.weakness', 'llm.think_generate', 'questions.save', 'kb.record']
@@ -348,14 +349,24 @@ class PlanSkill(Skill):
 
     def run(self, params, user):
         sid = int(params.get('student_id', 0) or 0)
+        req = params.get('req', '')
         exam_date = params.get('exam_date', '').strip()
+        days = int(params.get('days', 0) or 0)
+        if not exam_date and days > 0:
+            exam_date = (datetime.date.today() + datetime.timedelta(days=days)).isoformat()
         if not exam_date:
-            exam_date = (datetime.date.today() + datetime.timedelta(days=21)).isoformat()
+            # 关键信息缺失 → 二次询问（复习天数为必须项），不静默默认
+            return {'ok': True, 'record_file': '', 'ask': True,
+                    'output': ('📅 生成复习计划前，先确认关键信息：\n\n'
+                               '1. **复习天数**（必须）：距离考试还有多少天？或直接给我考试日期（如 `2026-12-30`）\n'
+                               '2. **目标**（可选）：如"重点冲必考点 / 全面过一遍 / 只补薄弱"\n'
+                               '3. **范围**（可选）：想重点复习的章节或知识点\n\n'
+                               '没说的部分，我会根据你的学情档案、知识库考点分布（难度/题型/内容量）'
+                               '和教师侧信息自动安排。')}
         try:
-            plan = services.llm_plan(exam_date, sid, params.get('req', ''))
+            plan = services.llm_plan(exam_date, sid, req)
         except Exception as e:
-            return {'ok': False, 'output': '❌ 复习计划生成失败：%s（未入库，不降级规则排程）' % str(e)[:150],
-                    'record_file': ''}
+            return {'ok': False, 'output': '❌ 复习计划生成失败：%s' % str(e)[:150], 'record_file': ''}
         if sid:
             dbm.save_plan(sid, exam_date, plan)
         day_lines = '\n'.join('- **Day %d（%s）**：%s' % (
@@ -365,8 +376,10 @@ class PlanSkill(Skill):
         from .adapters import llm_adapter as _llm
         if _llm.last_thinking:
             think = '\n\n🧠 **模型思考**：' + _llm.last_thinking[:350] + '…'
-        output = '📅 距考试 %d 天，复习计划已生成（结合学情与能力轨迹，倒计时精确）：\n%s%s%s' % (
-            len(plan), day_lines, '\n- ……（完整计划见记录）' if len(plan) > 7 else '', think)
+        inferred = '' if req.strip() else \
+            '\n\n📌 未指定目标/范围：已根据学情档案、考点分布与教师侧信息自动规划。'
+        output = '📅 距考试 %d 天，复习计划已生成（结合学情与能力轨迹，倒计时精确）：\n%s%s%s%s' % (
+            len(plan), day_lines, '\n- ……（完整计划见记录）' if len(plan) > 7 else '', think, inferred)
         body = '考试日期：%s\n生成时间：%s\n\n%s' % (
             exam_date, datetime.datetime.now().strftime('%Y-%m-%d %H:%M'),
             '\n'.join('- Day %d（%s）：%s' % (d['day'], d['date'],
@@ -607,6 +620,9 @@ def _parse_req(params: dict) -> dict:
     m = re.search(r'(\d{4}-\d{2}-\d{2})', req)
     if m and 'exam_date' not in params:
         params['exam_date'] = m.group(1)
+    m = re.search(r'(\d+)\s*[天日]', req)
+    if m and 'days' not in params and 'exam_date' not in params:
+        params['days'] = int(m.group(1))
     if not params.get('kp'):
         # 先与图谱知识点比对（取 req 里出现的最长者），再用 wiki 搜索定位，最后正则截取
         try:

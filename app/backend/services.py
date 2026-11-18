@@ -5,6 +5,7 @@
 import datetime
 import io
 import json
+import os
 
 from . import config, db as dbm, profile as profile_mod
 from .adapters import llm_adapter
@@ -35,6 +36,39 @@ def student_context(student_id: int) -> str:
             '%s[错因：%s]' % (m['question_text'][:45], m['error_cause'] or '未归类')
             for m in mistakes))
     return '\n'.join(parts)
+
+
+def course_context() -> str:
+    """课程考点分布概览：章节 × 权重 × 难度分级 × 题型 × 内容量，注入复习计划提示词。"""
+    try:
+        graph = json.load(io.open(config.graph_path(), encoding='utf-8'))
+    except Exception:
+        return '（暂无考点图谱）'
+    chapters = [n['name'] for n in graph['nodes'] if n['type'] == 'chapter']
+    kps = [n for n in graph['nodes'] if n['type'] == 'knowledge_point']
+    eps = [n for n in graph['nodes'] if n['type'] == 'exam_point']
+    lines = []
+    for ch in chapters:
+        ch_kps = [k for k in kps if k.get('chapter') == ch]
+        ch_eps = [e for e in eps if e.get('chapter') == ch]
+        if not ch_kps and not ch_eps:
+            continue
+        w = round(sum(e.get('weight', 0) for e in ch_eps) or sum(k.get('weight', 0) for k in ch_kps), 1)
+        lv = {}
+        for e in ch_eps:
+            lv[e.get('level', '常考')] = lv.get(e.get('level', '常考'), 0) + 1
+        qtypes = sorted({str(e.get('qtype', '')).strip() for e in ch_eps if e.get('qtype')})
+        size = 0
+        for k in ch_kps:
+            for s in (k.get('sources') or []):
+                try:
+                    size += os.path.getsize(os.path.join(config.kb_dir(), s))
+                except OSError:
+                    pass
+        lines.append('- %s：知识点 %d、考点 %d（必考%d/常考%d/了解%d）、权重 %.1f、题型 %s、内容约 %d 字'
+                     % (ch, len(ch_kps), len(ch_eps), lv.get('必考', 0), lv.get('常考', 0),
+                        lv.get('了解', 0), w, '/'.join(qtypes) or '—', size // 3))
+    return '\n'.join(lines) or '（暂无考点分布）'
 
 
 def _load_bank() -> list:
@@ -105,7 +139,8 @@ QUIZ_SYSTEM = (
     '"analysis":"完整解析：步骤+易错点，不超过 120 字"},\n'
     '{"type":"填空","kp":"知识点","qtype":"题型","q":"题干______。",'
     '"options":["标准答案"],"answer":0,"analysis":"解析"}]}\n'
-    '说明：选择题 4 个选项、answer 为正确项下标(0-3)；填空题 options 只含 1 个标准答案、answer 为 0。')
+    '说明：选择题 4 个选项、answer 为正确项下标(0-3)；填空题 options 只含 1 个标准答案、answer 为 0。'
+        '公式必须为可渲染标准 LaTeX：块级 $$..$$、行内 \(..\)，上下标用花括号包裹（$a^{m}$、$x_{1}$），严禁 $a^m_b^n$ 裸上下标。')
 
 
 def llm_quiz(kp: str, count: int, student_id: int = 0) -> list:
@@ -141,7 +176,8 @@ PLAN_SYSTEM = (
     '你是编译原理课程的复习规划教练。根据【学情档案】【考点权重】为学生制定逐天复习计划。\n'
     '要求：\n'
     '1. 天数必须与给定【本段日期列表】完全一致，一天不多一天不少，不得改动日期；\n'
-    '2. 按"薄弱程度×考点权重"定优先级：前期（约前 60%% 天数）攻坚薄弱点，后期滚动回顾+限时自测，'
+    '2. 按"薄弱程度×考点权重"定优先级，并结合【考点分布】的难度分级、题型与内容多少安排每日负荷'
+    '（必考且内容多的章多分天数）：前期（约前 60%% 天数）攻坚薄弱点，后期滚动回顾+限时自测，'
     '考前最后一天只做错题回顾与心态调整；\n'
     '3. 任务具体到动作：读什么类型的页、做什么题、练什么能力；每天 2-3 个任务，'
     'action 与 goal 简洁明确，随进度递进、不雷同；\n'
@@ -173,6 +209,13 @@ def llm_plan(exam_date: str, student_id: int = 0, req: str = '') -> list:
     wt_line = '、'.join('%s(权重%s)' % (k, w) for k, w in
                        sorted(weights.items(), key=lambda x: -x[1])[:12]) or '（暂无图谱）'
     stu = student_context(student_id)
+    dist = course_context()
+    try:
+        tea = profile_mod.teacher_profile_text()
+    except Exception:
+        tea = ''
+    if '暂无' in tea:
+        tea = ''
     plan = []
     chunk = 10
     for start in range(0, days, chunk):
@@ -183,10 +226,14 @@ def llm_plan(exam_date: str, student_id: int = 0, req: str = '') -> list:
                 '- %s：%s' % (d['date'], '；'.join(t['kp'] + '-' + t['action'] for t in d['tasks']))
                 for d in plan[-6:])
         user_msg = ('考试日期：%s（距今 %d 天，整份计划分 %d 段，这是第 %d 段）\n'
-                    '【本段日期列表】%s\n【学情档案】\n%s\n【考点权重】%s%s\n'
+                    '【本段日期列表】%s\n【学情档案】\n%s\n'
+                    '【考点分布（难度分级/题型/内容量）】\n%s\n'
+                    '%s【考点权重】%s%s\n'
                     '【额外要求】%s\n请为本段输出恰好 %d 天的计划。'
                     % (exam_date, days, (days + chunk - 1) // chunk, start // chunk + 1,
-                       ','.join(seg), stu, wt_line, prev, req or '无', len(seg)))
+                       ','.join(seg), stu, dist,
+                       ('\n【班级学情（教师侧参考）】\n%s\n' % tea) if tea else '',
+                       wt_line, prev, req or '无', len(seg)))
         raw = llm_adapter.chat_json(PLAN_SYSTEM, user_msg, temperature=0.4,
                                     timeout=TIMEOUT)
         items = raw.get('plan') if isinstance(raw, dict) else raw
@@ -221,7 +268,8 @@ VARIANT_SYSTEM = (
     '{"question":"已知文法 G[S]：S→AB，A→a|ε，B→b。\\n（1）求 FIRST、FOLLOW 集；\\n（2）判断是否 LL(1) 文法。",'
     '"answer":"（1）FIRST(A)={a,ε}，FIRST(B)={b}……（完整推导）",'
     '"steps":["求各非终结符 FIRST 集","按定义求 FOLLOW 集","求 SELECT 并判断"],'
-    '"hint":"先判断哪个非终结符可空，FOLLOW 会受它影响"}')
+    '"hint":"先判断哪个非终结符可空，FOLLOW 会受它影响"}'
+    '公式必须为可渲染标准 LaTeX：块级 $$..$$、行内 \\(..\\)，上下标用花括号包裹（$a^{m}$、$x_{1}$），严禁 $a^m_b^n$ 裸上下标。')
 
 
 def llm_variant(kp: str, proto: str = '', req: str = '', student_id: int = 0) -> dict:
@@ -255,6 +303,30 @@ def llm_variant(kp: str, proto: str = '', req: str = '', student_id: int = 0) ->
     return {'question': str(raw['question']).strip(), 'answer': answer,
             'steps': [str(s) for s in raw.get('steps', []) if str(s).strip()],
             'hint': str(raw.get('hint', '') or '先分析原型考查的核心概念')}
+
+
+# ---------- 自测整卷生成（Markdown 一整卷：题面 + 折叠答案；含大题） ----------
+SELFTEST_SYSTEM = (
+    '你是编译原理自测命题专家。命制一份完整自测卷（Markdown），结合【学情档案】覆盖薄弱点。\n'
+    '要求：题型混合——选择题、填空题、**大题（分析设计/应用题，约占三分之一）**；题目全新，不照抄题库。\n'
+    '输出格式（只输出 Markdown，不要 JSON）：\n'
+    '# 自测卷 · <主题>\n一行说明（题量、建议时限）。\n'
+    '每道题用二级标题：## 第N题（题型｜知识点）——例如 ## 第1题（选择｜LL(1)文法）\n'
+    '接着是题干；选择题选项每行一个：A. ……；大题完整给出条件与多问。\n'
+    '全部题面写完后：\n---\n<details><summary>🔑 答案与解析（点击展开）</summary>\n\n'
+    '### 第N题 答案：…\n解析（步骤+易错点，简明）\n（每题一条，顺序与题面一致）\n\n</details>\n'
+    '公式必须为可渲染标准 LaTeX：块级 $$..$$、行内 \\(..\\)，上下标用花括号包裹（$a^{m}$），'
+    '严禁 $a^m_b^n$ 裸上下标。')
+
+
+def llm_selftest_paper(kp: str, req: str, student_id: int = 0) -> str:
+    """生成整卷 Markdown（题面在前、答案折叠）。格式不合直接报错。"""
+    user_msg = ('【出题范围】%s\n【学情档案】\n%s\n【已有题库（避开）】\n%s\n【补充要求】%s'
+                % (kp or '全书综合', student_context(student_id), _bank_digest(kp), req or '无'))
+    text = llm_adapter.chat(SELFTEST_SYSTEM, user_msg, profile='derive', timeout=TIMEOUT)
+    if not text.strip() or '答案' not in text or '第' not in text:
+        raise LLMError('自测卷输出格式不合（缺题面或答案区）')
+    return text
 
 
 # ---------- 错因归类（LLM 四分类） ----------

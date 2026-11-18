@@ -4,12 +4,12 @@ import json
 import os
 import time
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from . import auth, config, db, profile, services, skills, teacher_tools
+from . import agent, auth, config, db, parser, profile, services, skills, teacher_tools
 from .adapters import database_adapter, dataset_adapter, llm_adapter, wiki_adapter
 
 app = FastAPI(title='编译原理考点地图智能体')
@@ -81,13 +81,15 @@ async def no_cache_html(request: Request, call_next):
 
 @app.middleware('http')
 async def auth_middleware(request: Request, call_next):
-    """除 /api/auth/* 与静态页外，所有 /api/* 需携带 X-Token 登录；X-Course-Id 切换课程。"""
+    """除 /api/auth/* 与静态页外，所有 /api/* 需登录；token 亦可走 query（iframe 预览用）；
+    X-Course-Id（或 query course）切换课程。"""
     path = request.url.path
-    cid = request.headers.get('X-Course-Id', '')
+    cid = request.headers.get('X-Course-Id') or request.query_params.get('course') or ''
     if cid:
         config.set_course(cid)
     if path.startswith('/api/') and not path.startswith('/api/auth/'):
-        if not auth.verify(request.headers.get('X-Token', '')):
+        tok = request.headers.get('X-Token') or request.query_params.get('token') or ''
+        if not auth.verify(tok):
             return JSONResponse({'detail': '未登录'}, status_code=401)
     return await call_next(request)
 
@@ -272,6 +274,162 @@ def ask(req: AskReq):
 
 
 # ================= 学生端：自测/诊断/计划/变式 =================
+# ================= 智能体编排层入口（意图路由 + 链路执行 + 记忆） =================
+class AgentChatReq(BaseModel):
+    message: str
+    student_id: int = 0
+    class_name: str = ''
+    history: list = []
+    attachments: list = []   # file_id 列表（/api/upload 返回）
+
+
+@app.post('/api/upload')
+async def api_upload(request: Request, file: UploadFile = File(...)):
+    """多模态附件上传（图片/文档）→ 返回 file_id 供 /api/agent/chat 引用。"""
+    user = _user(request)
+    data = await file.read()
+    try:
+        return parser.save_upload(data, file.filename or 'file',
+                                  (config.get_course() or {}).get('id', 'default'),
+                                  user.get('id') or user.get('username', 'u'))
+    except parser.ParseError as e:
+        raise HTTPException(400, str(e))
+
+
+@app.post('/api/agent/chat')
+def agent_chat(req: AgentChatReq, request: Request):
+    user = _user(request)
+    uid = req.student_id or user.get('id', 0)
+    cls = req.class_name or '编译2023'
+    try:
+        r = agent.chat(req.message, user['role'], uid, cls, user=user,
+                       attachments=req.attachments)
+    except agent.AgentError as e:
+        raise HTTPException(502, str(e))
+    return {'answer': r.get('answer', ''), 'sources': r.get('sources', []),
+            'record_file': r.get('record_file', ''), 'intent': r.get('intent', ''),
+            'clarify': r.get('clarify', False), 'ok': r.get('ok', True),
+            'trace': r.get('trace', [])}
+
+
+# ================= 投稿（学生笔记/勘误 → 审核队列） =================
+class SubmissionReq(BaseModel):
+    title: str
+    kind: str = '笔记'
+    source_file: str = ''
+    content: str = ''
+    student_id: int = 0
+
+
+@app.post('/api/submissions')
+def api_submit(req: SubmissionReq, request: Request):
+    user = _user(request)
+    content = req.content
+    if not content and req.source_file:
+        try:
+            content = wiki_adapter.get_page(req.source_file)['body']
+        except FileNotFoundError:
+            raise HTTPException(404, '来源页不存在：' + req.source_file)
+    if not content:
+        raise HTTPException(400, '投稿内容为空')
+    sid = req.student_id or user.get('id') or 0
+    sub_id = db.submission_create(kind=req.kind, author_type=user['role'], author_id=sid,
+                                  title=req.title, content=content,
+                                  source_file=req.source_file)
+    return {'id': sub_id, 'status': '待审'}
+
+
+@app.get('/api/submissions')
+def api_submissions(status: str = '', request: Request = None):
+    user = _user(request, 'teacher')
+    return db.submission_list('' if user.get('role') == 'admin' else '编译2023', status)
+
+
+class ReviewReq(BaseModel):
+    id: int
+    approve: bool
+    note: str = ''
+
+
+@app.post('/api/submissions/review')
+def api_review(req: ReviewReq, request: Request):
+    user = _user(request, 'teacher')
+    if not db.submission_review(req.id, approve=req.approve, note=req.note,
+                                reviewer=user.get('id') or 0):
+        raise HTTPException(404, '投稿不存在')
+    return {'ok': True, 'status': '通过' if req.approve else '驳回'}
+
+
+# ================= 自测整卷（生成/历史/自评） =================
+class SelftestGenReq(BaseModel):
+    student_id: int = 0
+    kp: str = ''
+    req: str = ''
+
+
+@app.post('/api/selftest/generate')
+def selftest_generate(req: SelftestGenReq):
+    try:
+        md = services.llm_selftest_paper(req.kp, req.req, req.student_id)
+    except Exception as e:
+        raise HTTPException(502, '自测卷生成失败：%s' % str(e)[:150])
+    import re as _re
+    title_m = _re.search(r'^#\s*(.+)$', md, _re.M)
+    title = (title_m.group(1).strip() if title_m else '自测卷')[:60]
+    meta = [{'idx': int(m.group(1)), 'qtype': m.group(2).strip(), 'kp': m.group(3).strip()}
+            for m in _re.finditer(r'##\s*第(\d+)题（([^｜|）)]*)[｜|]([^）)]*)）', md)]
+    sid = req.student_id
+    tid = db.selftest_save(sid, title, md, meta) if sid else 0
+    return {'id': tid, 'title': title, 'content_md': md, 'meta': meta}
+
+
+@app.get('/api/selftests')
+def selftest_history(student_id: int = 0):
+    return db.selftest_list(student_id)
+
+
+@app.get('/api/selftest')
+def selftest_get_api(id: int):
+    d = db.selftest_get(id)
+    if not d:
+        raise HTTPException(404, '自测卷不存在')
+    return d
+
+
+class SelftestMarkReq(BaseModel):
+    selftest_id: int
+    idx: int
+    verdict: str
+    kp: str = ''
+    student_id: int = 0
+
+
+@app.post('/api/selftest/mark')
+def selftest_mark_api(req: SelftestMarkReq):
+    if req.verdict not in ('正确', '错误', '不确定'):
+        raise HTTPException(400, 'verdict 应为 正确/错误/不确定')
+    db.selftest_mark(req.selftest_id, req.idx, req.verdict, req.kp)
+    sid = req.student_id
+    qid = 'selftest-%d-%d' % (req.selftest_id, req.idx)
+    if req.verdict == '正确':
+        if sid:
+            db.record_answer(sid, qid, req.kp, '自测', True)
+    else:
+        # 错误/不确定 → 错题本 + 学情（错因待后续归类）
+        qtext = ''
+        st = db.selftest_get(req.selftest_id)
+        import re as _re
+        m = _re.search(r'##\s*第%d题（[^）)]*）(.*?)(?=\n##\s*第|\n---)' % req.idx,
+                       st.get('content_md', ''), _re.S)
+        if m:
+            qtext = m.group(1).strip()[:500]
+        if sid:
+            db.record_answer(sid, qid, req.kp, '自测', False)
+            db.add_wrong_question(sid, qid, req.kp, qtext or '自测第 %d 题' % req.idx,
+                                  '（自评：%s）' % req.verdict, '', '')
+    return {'ok': True, 'verdict': req.verdict}
+
+
 def QUESTIONS_PATH():
     return config.questions_path()
 

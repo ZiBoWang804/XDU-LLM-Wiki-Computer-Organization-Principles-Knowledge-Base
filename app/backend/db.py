@@ -55,6 +55,47 @@ CREATE TABLE IF NOT EXISTS class_stats(      -- 教师端聚合缓存
   stat_json TEXT NOT NULL,
   updated_at INTEGER
 );
+CREATE TABLE IF NOT EXISTS memories(        -- 学习/教学记忆（owner 双命名空间硬隔离）
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  owner_type TEXT NOT NULL,                 -- student | teacher
+  owner_id INTEGER NOT NULL,                -- 学号/工号
+  kind TEXT NOT NULL,                       -- preference | focus | trend | habit
+  content TEXT NOT NULL,
+  source TEXT DEFAULT '',                   -- 来源链路（plan/diagnosis/chat…）
+  created_at INTEGER,
+  updated_at INTEGER
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_mem_owner ON memories(owner_type, owner_id, kind);
+CREATE TABLE IF NOT EXISTS selftests(        -- 自测整卷（历史可回看）
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  student_id INTEGER NOT NULL,
+  title TEXT DEFAULT '',
+  content_md TEXT NOT NULL,
+  meta_json TEXT DEFAULT '[]',
+  created_at INTEGER
+);
+CREATE TABLE IF NOT EXISTS selftest_marks(   -- 逐题自评：正确 | 错误 | 不确定
+  selftest_id INTEGER NOT NULL,
+  q_idx INTEGER NOT NULL,
+  verdict TEXT NOT NULL,
+  kp TEXT DEFAULT '',
+  created_at INTEGER,
+  UNIQUE(selftest_id, q_idx)
+);
+CREATE TABLE IF NOT EXISTS submissions(      -- 投稿审核队列（学生笔记/勘误 → 教师审）
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  kind TEXT DEFAULT '笔记',                  -- 笔记 | 勘误
+  author_type TEXT NOT NULL,                 -- student | teacher
+  author_id INTEGER NOT NULL,
+  title TEXT NOT NULL,
+  content TEXT DEFAULT '',
+  source_file TEXT DEFAULT '',               -- 投稿的来源页（可空）
+  status TEXT DEFAULT '待审',                -- 待审 | 通过 | 驳回
+  review_note TEXT DEFAULT '',
+  reviewer INTEGER DEFAULT 0,
+  created_at INTEGER,
+  reviewed_at INTEGER
+);
 """
 
 
@@ -175,6 +216,127 @@ def list_variants(student_id: int = 0, limit: int = 30) -> list:
         except Exception:
             r['variant'] = {}
     return rows
+
+
+# ---------- 记忆库（owner_type+owner_id 双命名空间；每 kind 一槽位，新覆盖旧） ----------
+def memory_read(owner_type: str, owner_id: int, limit: int = 5) -> list:
+    """只返回属于该 owner 的记忆条目——横向隔离由 WHERE 保证。"""
+    with get_conn() as conn:
+        rows = conn.execute(
+            'SELECT kind, content, source, updated_at FROM memories'
+            ' WHERE owner_type=? AND owner_id=? ORDER BY updated_at DESC LIMIT ?',
+            (owner_type, owner_id, limit)).fetchall()
+    return [dict(r) for r in rows]
+
+
+def memory_write(owner_type: str, owner_id: int, kind: str, content: str,
+                 source: str = '') -> int:
+    """写入/覆盖一条记忆（同 owner 同 kind 覆盖）。"""
+    now = int(time.time())
+    with get_conn() as conn:
+        cur = conn.execute(
+            'INSERT INTO memories(owner_type, owner_id, kind, content, source, created_at, updated_at)'
+            ' VALUES(?,?,?,?,?,?,?)'
+            ' ON CONFLICT(owner_type, owner_id, kind)'
+            ' DO UPDATE SET content=excluded.content, source=excluded.source, updated_at=excluded.updated_at',
+            (owner_type, owner_id, kind, content, source, now, now))
+        return cur.lastrowid
+
+
+def memory_text(owner_type: str, owner_id: int, limit: int = 5) -> str:
+    """记忆的紧凑文本版（注入生成上下文）。"""
+    items = memory_read(owner_type, owner_id, limit)
+    if not items:
+        return ''
+    return '\n'.join('- [%s] %s' % (m['kind'], m['content']) for m in items)
+
+
+# ---------- 自测卷（整卷历史 + 逐题自评） ----------
+def selftest_save(student_id: int, title: str, content_md: str, meta: list) -> int:
+    with get_conn() as conn:
+        cur = conn.execute(
+            'INSERT INTO selftests(student_id, title, content_md, meta_json, created_at)'
+            ' VALUES(?,?,?,?,?)',
+            (student_id, title, content_md, json.dumps(meta, ensure_ascii=False), int(time.time())))
+        return cur.lastrowid
+
+
+def selftest_list(student_id: int, limit: int = 20) -> list:
+    with get_conn() as conn:
+        rows = conn.execute(
+            'SELECT id, title, meta_json, created_at FROM selftests'
+            ' WHERE student_id=? ORDER BY id DESC LIMIT ?', (student_id, limit)).fetchall()
+    out = []
+    for r in rows:
+        d = dict(r)
+        try:
+            d['count'] = len(json.loads(d.pop('meta_json') or '[]'))
+        except Exception:
+            d['count'] = 0
+        out.append(d)
+    return out
+
+
+def selftest_get(selftest_id: int) -> dict:
+    with get_conn() as conn:
+        row = conn.execute('SELECT * FROM selftests WHERE id=?', (selftest_id,)).fetchone()
+    if not row:
+        return {}
+    d = dict(row)
+    try:
+        d['meta'] = json.loads(d.pop('meta_json') or '[]')
+    except Exception:
+        d['meta'] = []
+    return d
+
+
+def selftest_mark(selftest_id: int, q_idx: int, verdict: str, kp: str = '') -> int:
+    now = int(time.time())
+    with get_conn() as conn:
+        cur = conn.execute(
+            'INSERT INTO selftest_marks(selftest_id, q_idx, verdict, kp, created_at) VALUES(?,?,?,?,?)'
+            ' ON CONFLICT(selftest_id, q_idx)'
+            ' DO UPDATE SET verdict=excluded.verdict, kp=excluded.kp, created_at=excluded.created_at',
+            (selftest_id, q_idx, verdict, kp, now))
+        return cur.lastrowid
+
+
+# ---------- 投稿审核队列（学生笔记/勘误 → 教师审 → 发布/驳回） ----------
+def submission_create(kind: str, author_type: str, author_id: int, title: str,
+                      content: str = '', source_file: str = '') -> int:
+    with get_conn() as conn:
+        cur = conn.execute(
+            'INSERT INTO submissions(kind, author_type, author_id, title, content, source_file,'
+            ' status, created_at) VALUES(?,?,?,?,?,?,"待审",?)',
+            (kind, author_type, author_id, title, content, source_file, int(time.time())))
+        return cur.lastrowid
+
+
+def submission_list(class_name: str = '', status: str = '', limit: int = 20) -> list:
+    """教师视图：按班级过滤（学生投稿经 students 关联），可按状态过滤。"""
+    sql = ('SELECT sub.* FROM submissions sub'
+           ' LEFT JOIN students s ON s.id = sub.author_id AND sub.author_type = "student"')
+    conds, args = [], []
+    if class_name:
+        conds.append('(sub.author_type = "teacher" OR s.class_name = ?)')
+        args.append(class_name)
+    if status:
+        conds.append('sub.status = ?')
+        args.append(status)
+    if conds:
+        sql += ' WHERE ' + ' AND '.join(conds)
+    sql += ' ORDER BY sub.id DESC LIMIT ?'
+    args.append(limit)
+    with get_conn() as conn:
+        return [dict(r) for r in conn.execute(sql, tuple(args))]
+
+
+def submission_review(sub_id: int, approve: bool, note: str = '', reviewer: int = 0) -> bool:
+    with get_conn() as conn:
+        cur = conn.execute(
+            'UPDATE submissions SET status=?, review_note=?, reviewer=?, reviewed_at=? WHERE id=?',
+            ('通过' if approve else '驳回', note, reviewer, int(time.time()), sub_id))
+        return cur.rowcount > 0
 
 
 # ---------- 班级聚合（教师端） ----------
